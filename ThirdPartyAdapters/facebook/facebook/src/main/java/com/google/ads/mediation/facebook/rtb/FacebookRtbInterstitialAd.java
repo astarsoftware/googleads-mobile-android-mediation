@@ -11,6 +11,9 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.facebook.ads.Ad;
 import com.facebook.ads.ExtraHints;
 import com.facebook.ads.InterstitialAd;
@@ -113,6 +116,9 @@ public class FacebookRtbInterstitialAd implements MediationInterstitialAd,
   @Override
   public void onAdLoaded(Ad ad) {
     mInterstitalAdCallback = callback.onSuccess(this);
+
+	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+	  adTracker.adDidLoadForNetwork("facebook", "fullscreen", null);
   }
 
   @Override

@@ -7,10 +7,14 @@ import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
 import com.google.android.gms.ads.mediation.MediationInterstitialAdapter;
 import com.google.android.gms.ads.mediation.MediationInterstitialListener;
+import com.verizon.ads.CreativeInfo;
 import com.verizon.ads.ErrorInfo;
 import com.verizon.ads.VASAds;
 import com.verizon.ads.interstitialplacement.InterstitialAd;
@@ -18,6 +22,7 @@ import com.verizon.ads.interstitialplacement.InterstitialAdFactory;
 import com.verizon.ads.utils.TextUtils;
 import com.verizon.ads.utils.ThreadUtils;
 import java.lang.ref.WeakReference;
+import java.util.HashMap;
 import java.util.Map;
 
 final class VerizonMediaInterstitialRenderer implements InterstitialAd.InterstitialAdListener,
@@ -170,6 +175,21 @@ final class VerizonMediaInterstitialRenderer implements InterstitialAd.Interstit
         if (adapter != null && interstitialListener != null) {
           interstitialListener.onAdLoaded(adapter);
         }
+
+		  final CreativeInfo creativeInfo = interstitialAd == null ? null :
+			  interstitialAd.getCreativeInfo();
+
+		  Map<String, Object> networkInfo = new HashMap<>();
+		  if(creativeInfo != null && creativeInfo.getCreativeId() != null) {
+			  networkInfo.put("vzCreativeId", creativeInfo.getCreativeId());
+		  }
+		  if(creativeInfo != null && creativeInfo.getDemandSource() != null) {
+			  networkInfo.put("vzDemandSource", creativeInfo.getDemandSource());
+		  }
+		  networkInfo.put("vzCreativeType", "Interstitial");
+
+		  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		  adTracker.adDidLoadForNetwork("verizon", "fullscreen", networkInfo);
       }
     });
   }

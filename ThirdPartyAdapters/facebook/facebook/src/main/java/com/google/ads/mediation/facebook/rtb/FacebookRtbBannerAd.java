@@ -15,6 +15,9 @@ import android.view.View;
 import android.view.ViewGroup.LayoutParams;
 import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.facebook.ads.Ad;
 import com.facebook.ads.AdListener;
 import com.facebook.ads.AdView;
@@ -98,6 +101,9 @@ public class FacebookRtbBannerAd implements MediationBannerAd, AdListener {
   @Override
   public void onAdLoaded(Ad ad) {
     mBannerAdCallback = callback.onSuccess(this);
+
+	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+	  adTracker.adDidLoadForNetwork("facebook", "banner", null);
   }
 
   @Override

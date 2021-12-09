@@ -10,11 +10,15 @@ import android.view.Gravity;
 import android.view.View;
 import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
 import com.google.android.gms.ads.mediation.MediationBannerAdapter;
 import com.google.android.gms.ads.mediation.MediationBannerListener;
+import com.verizon.ads.CreativeInfo;
 import com.verizon.ads.ErrorInfo;
 import com.verizon.ads.VASAds;
 import com.verizon.ads.inlineplacement.InlineAdFactory;
@@ -23,6 +27,7 @@ import com.verizon.ads.utils.TextUtils;
 import com.verizon.ads.utils.ThreadUtils;
 import java.lang.ref.WeakReference;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 final class VerizonMediaBannerRenderer implements InlineAdView.InlineAdListener,
@@ -207,6 +212,21 @@ final class VerizonMediaBannerRenderer implements InlineAdView.InlineAdListener,
         if (bannerListener != null && adapter != null) {
           bannerListener.onAdLoaded(adapter);
         }
+
+		  final CreativeInfo creativeInfo = inlineAdView == null ? null :
+			  inlineAdView.getCreativeInfo();
+
+		  Map<String, Object> networkInfo = new HashMap<>();
+		  if(creativeInfo != null && creativeInfo.getCreativeId() != null) {
+			  networkInfo.put("vzCreativeId", creativeInfo.getCreativeId());
+		  }
+		  if(creativeInfo != null && creativeInfo.getDemandSource() != null) {
+			  networkInfo.put("vzDemandSource", creativeInfo.getDemandSource());
+		  }
+		  networkInfo.put("vzCreativeType", "Interstitial");
+
+		  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		  adTracker.adDidLoadForNetwork("verizon", "banner", networkInfo);
       }
     });
   }

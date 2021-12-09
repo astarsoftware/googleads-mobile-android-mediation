@@ -29,6 +29,9 @@ import android.widget.ImageView;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.facebook.ads.Ad;
 import com.facebook.ads.AdListener;
 import com.facebook.ads.AdOptionsView;
@@ -352,6 +355,9 @@ public final class FacebookAdapter extends FacebookMediationAdapter
     @Override
     public void onAdLoaded(Ad ad) {
       FacebookAdapter.this.mBannerListener.onAdLoaded(FacebookAdapter.this);
+
+		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		adTracker.adDidLoadForNetwork("facebook", "banner", null);
     }
 
     @Override
@@ -397,6 +403,9 @@ public final class FacebookAdapter extends FacebookMediationAdapter
     @Override
     public void onAdLoaded(Ad ad) {
       FacebookAdapter.this.mInterstitialListener.onAdLoaded(FacebookAdapter.this);
+
+		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		adTracker.adDidLoadForNetwork("facebook", "fullscreen", null);
     }
 
     @Override

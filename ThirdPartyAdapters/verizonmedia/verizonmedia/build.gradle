@@ -31,6 +31,7 @@ android {
 }
 
 dependencies {
+	implementation project(':Libraries:Java:Android:libAndroid')
     implementation 'androidx.annotation:annotation:1.2.0'
     implementation 'com.google.android.gms:play-services-ads:20.3.0'
     implementation ('com.verizon.ads:android-vas-standard-edition:1.14.0') {
