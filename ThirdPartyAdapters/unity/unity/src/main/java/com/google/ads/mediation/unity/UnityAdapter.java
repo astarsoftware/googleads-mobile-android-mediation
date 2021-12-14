@@ -24,6 +24,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import androidx.annotation.Keep;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
@@ -39,6 +42,7 @@ import com.unity3d.ads.UnityAds.UnityAdsLoadError;
 import com.unity3d.ads.UnityAds.UnityAdsShowError;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The {@link UnityAdapter} is used to load Unity ads and mediate the callbacks between Google
@@ -85,6 +89,13 @@ public class UnityAdapter extends UnityMediationAdapter implements MediationInte
       if (mMediationInterstitialListener != null) {
         mMediationInterstitialListener.onAdLoaded(UnityAdapter.this);
       }
+
+		Map<String, Object> networkInfo = new HashMap<>();
+      	if(placementId != null) {
+      		networkInfo.put("placementId", placementId);
+		}
+		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		adTracker.adDidLoadForNetwork("unity", "fullscreen", networkInfo);
     }
 
     @Override

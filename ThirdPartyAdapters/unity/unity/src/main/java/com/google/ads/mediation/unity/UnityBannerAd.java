@@ -24,6 +24,9 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import androidx.annotation.Keep;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
@@ -34,6 +37,9 @@ import com.unity3d.ads.UnityAds;
 import com.unity3d.services.banners.BannerErrorInfo;
 import com.unity3d.services.banners.BannerView;
 import com.unity3d.services.banners.UnityBannerSize;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * The {@link UnityBannerAd} is used to load Unity Banner ads and mediate the callbacks between
@@ -75,6 +81,13 @@ public class UnityBannerAd extends UnityMediationAdapter implements MediationBan
         return;
       }
       mMediationBannerListener.onAdLoaded(UnityBannerAd.this);
+
+		Map<String, Object> networkInfo = new HashMap<>();
+		if(bannerView.getPlacementId() != null) {
+			networkInfo.put("placementId", bannerView.getPlacementId());
+		}
+		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		adTracker.adDidLoadForNetwork("unity", "banner", networkInfo);
     }
 
     @Override
