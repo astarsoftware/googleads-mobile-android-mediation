@@ -87,7 +87,7 @@ public class UnityBannerAd extends UnityMediationAdapter implements MediationBan
 			networkInfo.put("placementId", bannerView.getPlacementId());
 		}
 		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-		adTracker.adDidLoadForNetwork("unity", "banner", networkInfo);
+		adTracker.adDidLoadForNetwork("unity", "admob", "banner", networkInfo);
     }
 
     @Override

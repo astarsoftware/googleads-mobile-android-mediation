@@ -95,7 +95,7 @@ public class UnityAdapter extends UnityMediationAdapter implements MediationInte
       		networkInfo.put("placementId", placementId);
 		}
 		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-		adTracker.adDidLoadForNetwork("unity", "fullscreen", networkInfo);
+		adTracker.adDidLoadForNetwork("unity", "admob", "fullscreen", networkInfo);
     }
 
     @Override

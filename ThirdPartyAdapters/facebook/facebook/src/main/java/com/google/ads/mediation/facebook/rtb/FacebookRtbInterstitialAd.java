@@ -118,7 +118,7 @@ public class FacebookRtbInterstitialAd implements MediationInterstitialAd,
     mInterstitalAdCallback = callback.onSuccess(this);
 
 	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-	  adTracker.adDidLoadForNetwork("facebook", "fullscreen", null);
+	  adTracker.adDidLoadForNetwork("facebook", "admob", "fullscreen", null);
   }
 
   @Override

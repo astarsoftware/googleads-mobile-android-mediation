@@ -357,7 +357,7 @@ public final class FacebookAdapter extends FacebookMediationAdapter
       FacebookAdapter.this.mBannerListener.onAdLoaded(FacebookAdapter.this);
 
 		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-		adTracker.adDidLoadForNetwork("facebook", "banner", null);
+		adTracker.adDidLoadForNetwork("facebook", "admob", "banner", null);
     }
 
     @Override
@@ -405,7 +405,7 @@ public final class FacebookAdapter extends FacebookMediationAdapter
       FacebookAdapter.this.mInterstitialListener.onAdLoaded(FacebookAdapter.this);
 
 		AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-		adTracker.adDidLoadForNetwork("facebook", "fullscreen", null);
+		adTracker.adDidLoadForNetwork("facebook", "admob", "fullscreen", null);
     }
 
     @Override

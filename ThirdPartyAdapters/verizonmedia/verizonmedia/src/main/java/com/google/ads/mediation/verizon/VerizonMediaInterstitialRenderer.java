@@ -189,7 +189,7 @@ final class VerizonMediaInterstitialRenderer implements InterstitialAd.Interstit
 		  networkInfo.put("vzCreativeType", "Interstitial");
 
 		  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-		  adTracker.adDidLoadForNetwork("verizon", "fullscreen", networkInfo);
+		  adTracker.adDidLoadForNetwork("verizon", "admob", "fullscreen", networkInfo);
       }
     });
   }

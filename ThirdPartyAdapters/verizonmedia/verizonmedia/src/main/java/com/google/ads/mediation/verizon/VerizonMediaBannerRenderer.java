@@ -223,10 +223,10 @@ final class VerizonMediaBannerRenderer implements InlineAdView.InlineAdListener,
 		  if(creativeInfo != null && creativeInfo.getDemandSource() != null) {
 			  networkInfo.put("vzDemandSource", creativeInfo.getDemandSource());
 		  }
-		  networkInfo.put("vzCreativeType", "Interstitial");
+		  networkInfo.put("vzCreativeType", "Banner");
 
 		  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-		  adTracker.adDidLoadForNetwork("verizon", "banner", networkInfo);
+		  adTracker.adDidLoadForNetwork("verizon", "admob", "banner", networkInfo);
       }
     });
   }

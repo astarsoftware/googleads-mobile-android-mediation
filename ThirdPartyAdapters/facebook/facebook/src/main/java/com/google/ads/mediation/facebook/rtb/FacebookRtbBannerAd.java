@@ -103,7 +103,7 @@ public class FacebookRtbBannerAd implements MediationBannerAd, AdListener {
     mBannerAdCallback = callback.onSuccess(this);
 
 	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
-	  adTracker.adDidLoadForNetwork("facebook", "banner", null);
+	  adTracker.adDidLoadForNetwork("facebook", "admob", "banner", null);
   }
 
   @Override
