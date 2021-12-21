@@ -256,7 +256,7 @@ public class IronSourceMediationAdapter extends Adapter
   }
 
   public void onRewardedVideoAdLoadFailed(String instanceId, IronSourceError ironSourceError) {
-    AdError loadError = new AdError(ironSourceError.getErrorCode(),
+    final AdError loadError = new AdError(ironSourceError.getErrorCode(),
         ironSourceError.getErrorMessage(), IRONSOURCE_SDK_ERROR_DOMAIN);
     String errorMessage = String
         .format("IronSource failed to load rewarded ad for instance ID: %s. Error: %s", instanceId,
@@ -325,7 +325,7 @@ public class IronSourceMediationAdapter extends Adapter
   }
 
   public void onRewardedVideoAdShowFailed(String instanceId, IronSourceError ironSourceError) {
-    AdError showError = new AdError(ironSourceError.getErrorCode(),
+    final AdError showError = new AdError(ironSourceError.getErrorCode(),
         ironSourceError.getErrorMessage(), IRONSOURCE_SDK_ERROR_DOMAIN);
     String errorMessage = String
         .format("IronSource failed to show rewarded ad for instance ID: %s. Error: %s", instanceId,
@@ -360,7 +360,7 @@ public class IronSourceMediationAdapter extends Adapter
 
   // region IronSourceAdapterListener implementation.
   @Override
-  public void onAdFailedToLoad(@NonNull AdError loadError) {
+  public void onAdFailedToLoad(@NonNull final AdError loadError) {
     Log.e(TAG, loadError.getMessage());
     IronSourceAdapterUtils.sendEventOnUIThread(
         new Runnable() {
@@ -374,7 +374,7 @@ public class IronSourceMediationAdapter extends Adapter
   }
 
   @Override
-  public void onAdFailedToShow(@NonNull AdError showError) {
+  public void onAdFailedToShow(@NonNull final AdError showError) {
     Log.e(TAG, showError.getMessage());
     IronSourceAdapterUtils.sendEventOnUIThread(
         new Runnable() {

@@ -11,12 +11,18 @@ import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.ads.mediation.ironsource.IronSourceManager.InitializationCallback;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
 import com.google.android.gms.ads.mediation.MediationInterstitialAdapter;
 import com.google.android.gms.ads.mediation.MediationInterstitialListener;
 import com.ironsource.mediationsdk.logger.IronSourceError;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * A {@link MediationInterstitialAdapter} to load and show IronSource interstitial ads using Google
@@ -85,7 +91,7 @@ public class IronSourceAdapter implements MediationInterstitialAdapter, IronSour
   }
 
   // region ISDemandOnlyInterstitialListener implementation.
-  public void onInterstitialAdReady(String instanceId) {
+  public void onInterstitialAdReady(final String instanceId) {
     Log.d(TAG, String.format("IronSource Interstitial ad loaded for instance ID: %s", instanceId));
 
     IronSourceAdapterUtils.sendEventOnUIThread(
@@ -95,12 +101,20 @@ public class IronSourceAdapter implements MediationInterstitialAdapter, IronSour
             if (mInterstitialListener != null) {
               mInterstitialListener.onAdLoaded(IronSourceAdapter.this);
             }
+
+			  Map<String, Object> networkInfo = new HashMap<>();
+			  if(instanceId != null) {
+				  networkInfo.put("instanceId", instanceId);
+			  }
+
+			  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+			  adTracker.adDidLoadForNetwork("ironsource", "admob", "fullscreen", networkInfo);
           }
         });
   }
 
   public void onInterstitialAdLoadFailed(String instanceId, final IronSourceError ironSourceError) {
-    AdError loadError = new AdError(ironSourceError.getErrorCode(),
+    final AdError loadError = new AdError(ironSourceError.getErrorCode(),
         ironSourceError.getErrorMessage(), IRONSOURCE_SDK_ERROR_DOMAIN);
     String errorMessage = String
         .format("IronSource failed to load interstitial ad for instance ID: %s. Error: %s",
@@ -184,7 +198,7 @@ public class IronSourceAdapter implements MediationInterstitialAdapter, IronSour
 
   // region IronSourceAdapterListener implementation.
   @Override
-  public void onAdFailedToLoad(@NonNull AdError loadError) {
+  public void onAdFailedToLoad(@NonNull final AdError loadError) {
     Log.e(TAG, loadError.getMessage());
     IronSourceAdapterUtils.sendEventOnUIThread(
         new Runnable() {
