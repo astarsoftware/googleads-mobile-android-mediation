@@ -1,4 +1,4 @@
-// Copyright 2020 Google Inc.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
 package com.google.ads.mediation.unity;
 
 import android.content.Context;
-import com.unity3d.ads.BuildConfig;
+import androidx.annotation.VisibleForTesting;
 import com.unity3d.ads.IUnityAdsInitializationListener;
 import com.unity3d.ads.UnityAds;
 import com.unity3d.ads.metadata.MediationMetaData;
@@ -25,13 +25,19 @@ import com.unity3d.ads.metadata.MediationMetaData;
  */
 public class UnityInitializer {
 
+  static final String ADMOB = "AdMob";
+
+  static final String KEY_ADAPTER_VERSION = "adapter_version";
+
   /**
    * UnityInitializer instance.
    */
   private static UnityInitializer unityInitializerInstance;
 
+  private final UnityAdsWrapper unityAdsWrapper;
+
   /**
-   * This method will return a {@link com.google.ads.mediation.unity.UnityInitializer} instance.
+   * Returns a {@link com.google.ads.mediation.unity.UnityInitializer} instance.
    *
    * @return the {@link #unityInitializerInstance}.
    */
@@ -42,10 +48,19 @@ public class UnityInitializer {
     return unityInitializerInstance;
   }
 
+  private UnityInitializer() {
+    unityAdsWrapper = new UnityAdsWrapper();
+  }
+
+  @VisibleForTesting
+  UnityInitializer(UnityAdsWrapper unityAdsWrapper) {
+    this.unityAdsWrapper = unityAdsWrapper;
+  }
+
   /**
-   * This method will initialize {@link UnityAds}.  In the case of multiple initialize calls
-   * UnityAds will call the appropriate functions provided in the IUnityAdsInitializationListener
-   * after initialization is complete.
+   * Initializes {@link UnityAds}. In the case of multiple initialize calls UnityAds will call the
+   * appropriate functions provided in the IUnityAdsInitializationListener after initialization is
+   * complete.
    *
    * @param context                The context.
    * @param gameId                 Unity Ads Game ID.
@@ -54,19 +69,19 @@ public class UnityInitializer {
   public void initializeUnityAds(Context context, String gameId, IUnityAdsInitializationListener
       initializationListener) {
 
-    if (UnityAds.isInitialized()) {
+    if (unityAdsWrapper.isInitialized()) {
       // Unity Ads is already initialized.
       initializationListener.onInitializationComplete();
       return;
     }
 
     // Set mediation meta data before initializing.
-    MediationMetaData mediationMetaData = new MediationMetaData(context);
-    mediationMetaData.setName("AdMob");
-    mediationMetaData.setVersion(BuildConfig.VERSION_NAME);
-    mediationMetaData.set("adapter_version", UnityAds.getVersion());
+    MediationMetaData mediationMetaData = unityAdsWrapper.getMediationMetaData(context);
+    mediationMetaData.setName(ADMOB);
+    mediationMetaData.setVersion(unityAdsWrapper.getVersion());
+    mediationMetaData.set(KEY_ADAPTER_VERSION, BuildConfig.ADAPTER_VERSION);
     mediationMetaData.commit();
 
-    UnityAds.initialize(context, gameId, false, true, initializationListener);
+    unityAdsWrapper.initialize(context, gameId, initializationListener);
   }
 }

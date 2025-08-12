@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.ads.mediation.mytarget;
 
 import static com.google.ads.mediation.mytarget.MyTargetTools.handleMediationExtras;
@@ -7,6 +21,7 @@ import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.VersionInfo;
 import com.google.android.gms.ads.mediation.Adapter;
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
@@ -14,13 +29,11 @@ import com.google.android.gms.ads.mediation.MediationConfiguration;
 import com.google.android.gms.ads.mediation.MediationRewardedAd;
 import com.google.android.gms.ads.mediation.MediationRewardedAdCallback;
 import com.google.android.gms.ads.mediation.MediationRewardedAdConfiguration;
-import com.google.android.gms.ads.mediation.VersionInfo;
-import com.google.android.gms.ads.rewarded.RewardItem;
 import com.my.target.ads.Reward;
 import com.my.target.ads.RewardedAd;
 import com.my.target.ads.RewardedAd.RewardedAdListener;
 import com.my.target.common.CustomParams;
-import com.my.target.common.MyTargetVersion;
+import com.my.target.common.models.IAdLoadingError;
 import java.util.List;
 
 public class MyTargetMediationAdapter extends Adapter
@@ -34,6 +47,8 @@ public class MyTargetMediationAdapter extends Adapter
 
   // MyTarget SDK error domain.
   public static final String MY_TARGET_SDK_ERROR_DOMAIN = "com.my.target.ads";
+
+  public static final String ERROR_MSG_AD_FAILED_TO_SHOW = "MyTarget ad failed to show";
 
   /**
    * MyTarget SDK returned an error.
@@ -64,6 +79,11 @@ public class MyTargetMediationAdapter extends Adapter
    * The loaded native ad from myTarget is missing some required assets (e.g. image or icon).
    */
   public static final int ERROR_MISSING_REQUIRED_NATIVE_ASSET = 105;
+
+  /**
+   * MyTarget SDK failed to show the ad.
+   */
+  public static final int ERROR_AD_FAILED_TO_SHOW = 106;
   // endregion
 
   private RewardedAd mRewardedAd;
@@ -75,9 +95,10 @@ public class MyTargetMediationAdapter extends Adapter
   /**
    * {@link Adapter} implementation
    */
+  @NonNull
   @Override
   public VersionInfo getVersionInfo() {
-    String versionString = BuildConfig.ADAPTER_VERSION;
+    String versionString = MyTargetAdapterUtils.getAdapterVersion();
     String[] splits = versionString.split("\\.");
 
     if (splits.length >= 4) {
@@ -94,9 +115,10 @@ public class MyTargetMediationAdapter extends Adapter
     return new VersionInfo(0, 0, 0);
   }
 
+  @NonNull
   @Override
   public VersionInfo getSDKVersionInfo() {
-    String versionString = MyTargetVersion.VERSION;
+    String versionString = MyTargetSdkWrapper.getSdkVersion();
     String[] splits = versionString.split("\\.");
 
     if (splits.length >= 3) {
@@ -114,9 +136,9 @@ public class MyTargetMediationAdapter extends Adapter
   }
 
   @Override
-  public void initialize(Context context,
-      InitializationCompleteCallback initializationCompleteCallback,
-      List<MediationConfiguration> mediationConfigurations) {
+  public void initialize(@NonNull Context context,
+      @NonNull InitializationCompleteCallback initializationCompleteCallback,
+      @NonNull List<MediationConfiguration> mediationConfigurations) {
 
     // MyTarget SDK does not have any API for initialization.
     initializationCompleteCallback.onInitializationSucceeded();
@@ -124,9 +146,9 @@ public class MyTargetMediationAdapter extends Adapter
 
   @Override
   public void loadRewardedAd(
-      MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
-      MediationAdLoadCallback<MediationRewardedAd,
-          MediationRewardedAdCallback> mediationAdLoadCallback) {
+      @NonNull MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
+      @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
+          mediationAdLoadCallback) {
 
     Context context = mediationRewardedAdConfiguration.getContext();
     Bundle serverParameters = mediationRewardedAdConfiguration.getServerParameters();
@@ -144,7 +166,7 @@ public class MyTargetMediationAdapter extends Adapter
 
     mAdLoadCallback = mediationAdLoadCallback;
 
-    mRewardedAd = new RewardedAd(slotId, context);
+    mRewardedAd = MyTargetSdkWrapper.createRewardedAd(slotId, context);
     CustomParams params = mRewardedAd.getCustomParams();
     handleMediationExtras(TAG, mediationRewardedAdConfiguration.getMediationExtras(), params);
     params.setCustomParam(MyTargetTools.PARAM_MEDIATION_KEY,
@@ -154,7 +176,7 @@ public class MyTargetMediationAdapter extends Adapter
   }
 
   @Override
-  public void showAd(Context context) {
+  public void showAd(@NonNull Context context) {
     Log.d(TAG, "Showing video.");
     if (mRewardedAd != null) {
       mRewardedAd.show();
@@ -175,8 +197,9 @@ public class MyTargetMediationAdapter extends Adapter
   }
 
   @Override
-  public void onNoAd(@NonNull final String reason, @NonNull final RewardedAd ad) {
-    AdError error = new AdError(ERROR_MY_TARGET_SDK, reason, MY_TARGET_SDK_ERROR_DOMAIN);
+  public void onNoAd(@NonNull final IAdLoadingError reason, @NonNull final RewardedAd ad) {
+    AdError error = 
+        new AdError(ERROR_MY_TARGET_SDK, reason.getMessage(), MY_TARGET_SDK_ERROR_DOMAIN);
     Log.e(TAG, error.getMessage());
     if (mAdLoadCallback != null) {
       mAdLoadCallback.onFailure(error);
@@ -204,7 +227,7 @@ public class MyTargetMediationAdapter extends Adapter
     Log.d(TAG, "Rewarded.");
     if (mRewardedAdCallback != null) {
       mRewardedAdCallback.onVideoComplete();
-      mRewardedAdCallback.onUserEarnedReward(new MyTargetReward(reward));
+      mRewardedAdCallback.onUserEarnedReward();
     }
   }
 
@@ -220,24 +243,13 @@ public class MyTargetMediationAdapter extends Adapter
     }
   }
 
-  private static class MyTargetReward implements RewardItem {
-
-    private final @NonNull
-    String type;
-
-    public MyTargetReward(@NonNull Reward reward) {
-      this.type = reward.type;
-    }
-
-    @Override
-    public @NonNull
-    String getType() {
-      return type;
-    }
-
-    @Override
-    public int getAmount() {
-      return 1;
+  @Override
+  public void onFailedToShow(@NonNull RewardedAd rewardedAd) {
+    AdError error =
+        new AdError(ERROR_AD_FAILED_TO_SHOW, ERROR_MSG_AD_FAILED_TO_SHOW, ERROR_DOMAIN);
+    Log.d(TAG, error.getMessage());
+    if (mRewardedAdCallback != null) {
+      mRewardedAdCallback.onAdFailedToShow(error);
     }
   }
 }

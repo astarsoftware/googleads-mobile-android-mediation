@@ -1,7 +1,22 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.ads.mediation.imobile;
 
 import static com.google.ads.mediation.imobile.IMobileMediationAdapter.IMOBILE_SDK_ERROR_DOMAIN;
 
+import androidx.annotation.NonNull;
 import com.google.android.gms.ads.AdError;
 import jp.co.imobile.sdkads.android.FailNotificationReason;
 
@@ -16,6 +31,7 @@ public final class AdapterHelper {
    * @param reason i-mobile fail reason
    * @return error code
    */
+  @NonNull
   public static AdError getAdError(FailNotificationReason reason) {
     // Error '99' to indicate that the error is new and has not been supported by the adapter yet.
     int code = 99;
@@ -47,9 +63,15 @@ public final class AdapterHelper {
       case SHOW_TIMEOUT:
         code = 8;
         break;
+      case UNKNOWN:
+        code = 9;
+        break;
     }
-    return new AdError(code,
-        "Failed to request ad from Imobile: " + reason.toString(),
+    return new AdError(code, "Failed to request ad from Imobile: " + reason,
         IMOBILE_SDK_ERROR_DOMAIN);
+  }
+
+  static String getAdapterVersion() {
+    return BuildConfig.ADAPTER_VERSION;
   }
 }

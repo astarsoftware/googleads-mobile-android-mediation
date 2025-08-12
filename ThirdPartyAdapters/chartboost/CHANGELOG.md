@@ -1,19 +1,203 @@
 ## Chartboost Android Mediation Adapter Changelog
 
+#### Version 9.9.1.0 (In progress)
+- Updated onAdExpired event to work with the latest Chartboost SDK.
+
+#### Version 9.9.0.0
+- Verified compatibility with Chartboost SDK version 9.9.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.4.0.
+- Chartboost SDK version 9.9.0.
+
+#### Version 9.8.3.1
+- Updated the minimum required Android API level to 23.
+- Updated the minimum required Google Mobile Ads SDK version to 24.0.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.0.0.
+- Chartboost SDK version 9.8.3.
+
+#### Version 9.8.3.0
+- Verified compatibility with Chartboost SDK version 9.8.3.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.6.0.
+- Chartboost SDK version 9.8.3.
+
+#### Version 9.8.2.0
+- Verified compatibility with Chartboost SDK version 9.8.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.6.0.
+- Chartboost SDK version 9.8.2.
+
+#### Version 9.8.1.0
+- Verified compatibility with Chartboost SDK version 9.8.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.5.0.
+- Chartboost SDK version 9.8.1.
+
+#### Version 9.8.0.0
+- Verified compatibility with Chartboost SDK version 9.8.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.4.0.
+- Chartboost SDK version 9.8.0.
+
+#### Version 9.7.0.0
+- Verified compatibility with Chartboost SDK version 9.7.0.
+- Updated the minimum required Google Mobile Ads SDK version to 23.0.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.0.0.
+- Chartboost SDK version 9.7.0.
+
+#### Version 9.6.1.0
+- Verified compatibility with Chartboost SDK version 9.6.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.6.0.
+- Chartboost SDK version 9.6.1.
+
+#### Version 9.6.0.0
+- Verified compatibility with Chartboost SDK version 9.6.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.5.0.
+- Chartboost SDK version 9.6.0.
+
+#### Version 9.5.0.0
+- Verified compatibility with Chartboost SDK version 9.5.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.3.0.
+- Chartboost SDK version 9.5.0.
+
+#### Version 9.4.1.0
+- Verified compatibility with Chartboost SDK version 9.4.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.2.0.
+- Chartboost SDK version 9.4.1.
+
+#### Version 9.4.0.0
+- Verified compatibility with Chartboost SDK version 9.4.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.1.0.
+- Chartboost SDK version 9.4.0.
+
+#### Version 9.3.1.0
+- Verified compatibility with Chartboost SDK version 9.3.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.1.0.
+- Chartboost SDK version 9.3.1.
+
+#### Version 9.3.0.0
+- Verified compatibility with Chartboost SDK version 9.3.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.0.0.
+- Chartboost SDK version 9.3.0.
+
+#### Version 9.2.1.1
+- Updated adapter to use new `VersionInfo` class.
+- Updated the minimum required Google Mobile Ads SDK version to 22.0.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.0.0.
+- Chartboost SDK version 9.2.1.
+
+#### Version 9.2.1.0
+- Verified compatibility with Chartboost SDK 9.2.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.5.0.
+- Chartboost SDK version 9.2.1.
+
+#### Version 9.2.0.0
+- Verified compatibility with Chartboost SDK 9.2.0.
+- Updated the minimum required Google Mobile Ads SDK version to 21.5.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.5.0.
+- Chartboost SDK version 9.2.0.
+
+#### Version 9.1.1.0
+- Added the `ChartboostMediationAdapter.setAppParams(String, String)` method as an optional way to
+  hardcode which app ID and app signature to use to initialize the Chartboost SDK.
+- Verified compatibility with Chartboost SDK 9.1.1.
+- Updated the minimum required Google Mobile Ads SDK version to 21.3.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.3.0.
+- Chartboost SDK version 9.1.1.
+
+#### Version 8.4.3.1
+- Updated the minimum required Google Mobile Ads SDK version to 21.0.0.
+- Updated the minimum required Android API level to 19.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.0.0.
+- Chartboost SDK version 8.4.3.
+
+#### Version 8.4.3.0
+- Verified compatibility with Chartboost SDK 8.4.3.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.6.0.
+- Chartboost SDK version 8.4.3.
+
+#### Version 8.4.2.0
+- Verified compatibility with Chartboost SDK 8.4.2.
+- Updated `compileSdkVersion` and `targetSdkVersion` to API 31.
+- Updated the minimum required Google Mobile Ads SDK version to 20.6.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.6.0.
+- Chartboost SDK version 8.4.2.
+
+#### Version 8.4.1.0
+- Verified compatibility with Chartboost SDK 8.4.1.
+- Updated the minimum required Google Mobile Ads SDK version to 20.6.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.6.0.
+- Chartboost SDK version 8.4.1.
+
+#### Version 8.3.1.0
+- Verified compatibility with Chartboost SDK 8.3.1.
+- Updated the adapter to use new `AdError` API.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.5.0.
+- Chartboost SDK version 8.3.1.
+
+#### Version 8.3.0.0
+- Verified compatibility with Chartboost SDK 8.3.0.
+- Updated the minimum required Google Mobile Ads SDK version to 20.5.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.5.0.
+- Chartboost SDK version 8.3.0.
+
 #### Version 8.2.1.0
 - Verified compatibility with Chartboost SDK 8.2.1.
 - Updated the minimum required Google Mobile Ads SDK version to 20.1.0.
 
 Built and tested with:
 - Google Mobile Ads SDK version 20.1.0.
-- Chartboost SDK version 8.2.1
+- Chartboost SDK version 8.2.1.
 
 #### Version 8.2.0.1
 - Updated the minimum required Google Mobile Ads SDK version to 20.0.0.
 
 Built and tested with:
 - Google Mobile Ads SDK version 20.0.0.
-- Chartboost SDK version 8.2.0
+- Chartboost SDK version 8.2.0.
 
 #### Version 8.2.0.0
 - Verified compatibility with Chartboost SDK 8.2.0.
@@ -21,14 +205,14 @@ Built and tested with:
 
 Built and tested with:
 - Google Mobile Ads SDK version 19.5.0.
-- Chartboost SDK version 8.2.0
+- Chartboost SDK version 8.2.0.
 
 #### Version 8.1.0.0
 - Verified compatibility with Chartboost SDK 8.1.0.
 
 Built and tested with:
 - Google Mobile Ads SDK version 19.2.0.
-- Chartboost SDK version 8.1.0
+- Chartboost SDK version 8.1.0.
 
 #### Version 8.0.3.2
 - Added descriptive error codes and reasons for adapter load/show failures.

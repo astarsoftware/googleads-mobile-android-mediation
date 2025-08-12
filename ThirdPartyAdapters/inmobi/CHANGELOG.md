@@ -1,5 +1,268 @@
 ## InMobi Android Mediation Adapter Changelog
 
+#### Version 10.8.3.1
+- Removed account ID and placement ID validation checks on bidding requests.
+- For banner bidding requests, removes a validation check that enforces the banner size to map to a standard InMobi ad size. If InMobi bidder bids on a non-standard size, the adapter now allows that request to render.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.2.0.
+- InMobi Kotlin SDK version 10.8.3.
+
+#### Version 10.8.3.0
+- Verified compatibility with InMobi Kotlin SDK version 10.8.3.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.2.0.
+- InMobi Kotlin SDK version 10.8.3.
+
+#### Version 10.8.2.0
+- Verified compatibility with InMobi Kotlin SDK version 10.8.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.0.0.
+- InMobi Kotlin SDK version 10.8.2.
+
+#### Version 10.8.0.1
+- Updated the minimum required Android API level to 23.
+- Updated the minimum required Google Mobile Ads SDK version to 24.0.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.0.0.
+- InMobi Kotlin SDK version 10.8.0.
+
+#### Version 10.8.0.0
+- Compile with Java 11 instead of Java 17.
+- Verified compatibility with InMobi Kotlin SDK version 10.8.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.5.0.
+- InMobi Kotlin SDK version 10.8.0.
+
+#### Version 10.7.8.1
+- Reverted the minimum required Android API level to 21.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.3.0.
+- InMobi Kotlin SDK version 10.7.8.
+
+#### Version 10.7.8.0
+- Verified compatibility with InMobi Kotlin SDK version 10.7.8.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.3.0.
+- InMobi Kotlin SDK version 10.7.8.
+
+#### Version 10.7.7.0
+- Verified compatibility with InMobi Kotlin SDK version 10.7.7.
+- Updated the minimum required Android API level to 24.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.3.0.
+- InMobi Kotlin SDK version 10.7.7.
+
+#### Version 10.7.5.0
+- Verified compatibility with InMobi Kotlin SDK version 10.7.5.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.2.0.
+- InMobi Kotlin SDK version 10.7.5.
+
+#### Version 10.7.4.0
+- Verified compatibility with InMobi Kotlin SDK version 10.7.4.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.1.0.
+- InMobi Kotlin SDK version 10.7.4.
+
+#### Version 10.7.3.0
+- Verified compatibility with InMobi Kotlin SDK version 10.7.3.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.1.0.
+- InMobi Kotlin SDK version 10.7.3.
+
+#### Version 10.6.7.1
+- Updated the minimum required Google Mobile Ads SDK version to 23.0.0.
+- Verified compatibility with InMobi Kotlin SDK version 10.6.7.
+
+Built and tested with:
+- Google Mobile Ads SDK version 23.0.0.
+- InMobi Kotlin SDK version 10.6.7.
+
+#### Version 10.6.7.0
+- Verified compatibility with InMobi Kotlin SDK version 10.6.7.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.6.0.
+- InMobi Kotlin SDK version 10.6.7.
+
+#### Version 10.6.6.0
+- Verified compatibility with InMobi Kotlin SDK version 10.6.6.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.6.0.
+- InMobi Kotlin SDK version 10.6.6.
+
+#### Version 10.6.3.0
+- Added watermark support for bidding banner, interstitial and rewarded ads.
+- Verified compatibility with InMobi Kotlin SDK version 10.6.3.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.6.0.
+- InMobi Kotlin SDK version 10.6.3.
+
+#### Version 10.6.2.0
+- Updated the adapter to invoke Google Mobile Ads SDK's mediation callback
+`onAdFailedToShow` when InMobi interstitial ads fail to display.
+- Verified compatibility with InMobi Kotlin SDK version 10.6.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.5.0.
+- InMobi Kotlin SDK version 10.6.2.
+
+#### Version 10.6.0.0
+- Verified compatibility with InMobi Kotlin SDK version 10.6.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.3.0.
+- InMobi Kotlin SDK version 10.6.0.
+
+#### Version 10.5.9.0
+- Verified compatibility with InMobi Kotlin SDK version 10.5.9.
+- Updated the adapter to load InMobi banner ads with the closest supported banner ad sizes instead of the requested ad sizes. This will help reduce InMobi no-fills.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.3.0.
+- InMobi Kotlin SDK version 10.5.9.
+
+#### Version 10.5.8.0
+- Fixed an issue where the adapter fails to initialize.
+- Updated dependencies to resolve class path conflicts.
+- Updated the minimum required Google Mobile Ads SDK version to 22.3.0.
+- Verified compatibility with InMobi Kotlin SDK version 10.5.8.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.3.0.
+- InMobi Kotlin SDK version 10.5.8.
+
+#### Version 10.5.7.1
+- Added support to read IAB U.S. Privacy string from shared preferences.
+- Added bidding support for banner (includes MREC), interstitial and rewarded
+ad formats.
+- Updated the minimum required Google Mobile Ads SDK version to 22.2.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.2.0.
+- InMobi Kotlin SDK version 10.5.7.
+
+#### Version 10.5.7.0
+- Verified compatibility with InMobi Kotlin SDK version 10.5.7.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.1.0.
+- InMobi Kotlin SDK version 10.5.7.
+
+#### Version 10.5.5.0
+- Verified compatibility with InMobi Kotlin SDK version 10.5.5.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.1.0.
+- InMobi Kotlin SDK version 10.5.5.
+
+#### Version 10.5.4.1
+- Updated adapter to use new `VersionInfo` class.
+- Updated the minimum required Google Mobile Ads SDK version to 22.0.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 22.0.0.
+- InMobi Kotlin SDK version 10.5.4.
+
+#### Version 10.5.4.0
+- Verified compatibility with InMobi Kotlin SDK version 10.5.4.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.4.0.
+- InMobi Kotlin SDK version 10.5.4.
+
+#### Version 10.1.2.1
+- Added support for forwarding the COPPA value to InMobi SDK.
+- Updated the adapter to use the new mediation APIs.
+- Updated the minimum required Google Mobile Ads SDK version to 21.4.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.4.0.
+- InMobi SDK version 10.1.2.
+
+#### Version 10.1.2.0
+- Verified compatibility with InMobi SDK version 10.1.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.3.0.
+- InMobi SDK version 10.1.2.
+
+#### Version 10.1.1.0
+- Verified compatibility with InMobi SDK version 10.1.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.3.0.
+- InMobi SDK version 10.1.1.
+
+#### Version 10.0.9.0
+- Verified compatibility with InMobi SDK version 10.0.9.
+- Updated the minimum required Google Mobile Ads SDK version to 21.3.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.3.0.
+- InMobi SDK version 10.0.9.
+
+#### Version 10.0.8.0
+- Verified compatibility with InMobi SDK version 10.0.8.
+- Updated the minimum required Google Mobile Ads SDK version to 21.2.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.2.0.
+- InMobi SDK version 10.0.8.
+
+#### Version 10.0.7.0
+- Verified compatibility with InMobi SDK version 10.0.7.
+- Updated `compileSdkVersion` and `targetSdkVersion` to API 31.
+- Updated the minimum required Google Mobile Ads SDK version to 21.0.0.
+- Updated the minimum required Android API level to 19.
+
+Built and tested with:
+- Google Mobile Ads SDK version 21.0.0.
+- InMobi SDK version 10.0.7.
+
+#### Version 10.0.6.0
+- Verified compatibility with InMobi SDK version 10.0.6.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.6.0.
+- InMobi SDK version 10.0.6.
+
+#### Version 10.0.5.0
+- Verified compatibility with InMobi SDK version 10.0.5.
+- Updated the minimum required Google Mobile Ads SDK version to 20.6.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.6.0.
+- InMobi SDK version 10.0.5.
+
+#### Version 10.0.3.0
+- Verified compatibility with InMobi SDK version 10.0.3.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.5.0.
+- InMobi SDK version 10.0.3.
+
+#### Version 10.0.2.0
+- Verified compatibility with InMobi SDK version 10.0.2.
+- Updated the minimum required Google Mobile Ads SDK version to 20.5.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 20.5.0.
+- InMobi SDK version 10.0.2.
+
 #### Version 10.0.1.0
 - Verified compatibility with InMobi SDK version 10.0.1.
 - Updated the minimum required Google Mobile Ads SDK version to 20.4.0.

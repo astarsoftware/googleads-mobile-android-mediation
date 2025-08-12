@@ -1,0 +1,21 @@
+pluginManagement {
+    repositories {
+        google()
+        mavenCentral()
+        gradlePluginPortal()
+    }
+}
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()
+        mavenCentral()
+        maven {
+            url 'https://repo.pubmatic.com/artifactory/public-repos'
+        }
+    }
+}
+rootProject.name = "pubmatic"
+include ':pubmatic'
+include 'adaptertestkit'
+project(":adaptertestkit").projectDir = file("../adaptertestkit")

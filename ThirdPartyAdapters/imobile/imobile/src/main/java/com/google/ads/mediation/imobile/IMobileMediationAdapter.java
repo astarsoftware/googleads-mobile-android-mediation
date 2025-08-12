@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.ads.mediation.imobile;
 
 import android.app.Activity;
@@ -8,14 +22,16 @@ import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.VersionInfo;
 import com.google.android.gms.ads.mediation.Adapter;
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback;
 import com.google.android.gms.ads.mediation.MediationConfiguration;
 import com.google.android.gms.ads.mediation.MediationNativeAdapter;
 import com.google.android.gms.ads.mediation.MediationNativeListener;
 import com.google.android.gms.ads.mediation.NativeMediationAdRequest;
-import com.google.android.gms.ads.mediation.VersionInfo;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.util.List;
@@ -80,15 +96,17 @@ public final class IMobileMediationAdapter extends Adapter implements MediationN
   public static final int ERROR_EMPTY_NATIVE_ADS_LIST = 104;
 
   // region - Adapter interface
+  @NonNull
   @Override
   public VersionInfo getSDKVersionInfo() {
     // i-mobile does not have any API to retrieve their SDK version.
     return new VersionInfo(0, 0, 0);
   }
 
+  @NonNull
   @Override
   public VersionInfo getVersionInfo() {
-    String versionString = BuildConfig.ADAPTER_VERSION;
+    String versionString = AdapterHelper.getAdapterVersion();
     String[] splits = versionString.split("\\.");
 
     if (splits.length >= 4) {
@@ -107,10 +125,9 @@ public final class IMobileMediationAdapter extends Adapter implements MediationN
   }
 
   @Override
-  public void initialize(
-      Context context,
-      InitializationCompleteCallback initializationCompleteCallback,
-      List<MediationConfiguration> list) {
+  public void initialize(@NonNull Context context,
+      @NonNull InitializationCompleteCallback initializationCompleteCallback,
+      @NonNull List<MediationConfiguration> list) {
 
     // i-mobile does not have any API for initialization.
     initializationCompleteCallback.onInitializationSucceeded();
@@ -126,12 +143,9 @@ public final class IMobileMediationAdapter extends Adapter implements MediationN
 
   // region - Methods for native ads.
   @Override
-  public void requestNativeAd(
-      Context context,
-      MediationNativeListener listener,
-      Bundle serverParameters,
-      NativeMediationAdRequest mediationAdRequest,
-      Bundle mediationExtras) {
+  public void requestNativeAd(@NonNull Context context, @NonNull MediationNativeListener listener,
+      @NonNull Bundle serverParameters, @NonNull NativeMediationAdRequest mediationAdRequest,
+      @Nullable Bundle mediationExtras) {
 
     // Validate Context.
     if (!(context instanceof Activity)) {

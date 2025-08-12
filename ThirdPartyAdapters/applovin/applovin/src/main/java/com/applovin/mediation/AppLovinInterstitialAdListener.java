@@ -1,3 +1,17 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.applovin.mediation;
 
 import static android.util.Log.DEBUG;
@@ -15,35 +29,35 @@ import com.google.android.gms.ads.mediation.MediationInterstitialListener;
 class AppLovinInterstitialAdListener
     implements AppLovinAdDisplayListener, AppLovinAdClickListener, AppLovinAdVideoPlaybackListener {
 
-  private final ApplovinAdapter mAdapter;
-  private final MediationInterstitialListener mMediationInterstitialListener;
+  private final ApplovinAdapter adapter;
+  private final MediationInterstitialListener mediationInterstitialListener;
 
   AppLovinInterstitialAdListener(
       ApplovinAdapter adapter, MediationInterstitialListener mediationInterstitialListener) {
-    mAdapter = adapter;
-    mMediationInterstitialListener = mediationInterstitialListener;
+    this.adapter = adapter;
+    this.mediationInterstitialListener = mediationInterstitialListener;
   }
 
   // Ad Display Listener.
   @Override
   public void adDisplayed(AppLovinAd ad) {
     ApplovinAdapter.log(DEBUG, "Interstitial displayed.");
-    mMediationInterstitialListener.onAdOpened(mAdapter);
+    mediationInterstitialListener.onAdOpened(adapter);
   }
 
   @Override
   public void adHidden(AppLovinAd ad) {
     ApplovinAdapter.log(DEBUG, "Interstitial dismissed.");
-    mAdapter.unregister();
-    mMediationInterstitialListener.onAdClosed(mAdapter);
+    adapter.unregister();
+    mediationInterstitialListener.onAdClosed(adapter);
   }
 
   // Ad Click Listener.
   @Override
   public void adClicked(AppLovinAd ad) {
     ApplovinAdapter.log(DEBUG, "Interstitial clicked.");
-    mMediationInterstitialListener.onAdClicked(mAdapter);
-    mMediationInterstitialListener.onAdLeftApplication(mAdapter);
+    mediationInterstitialListener.onAdClicked(adapter);
+    mediationInterstitialListener.onAdLeftApplication(adapter);
   }
 
   // Ad Video Playback Listener.

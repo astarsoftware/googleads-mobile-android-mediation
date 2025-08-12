@@ -1,22 +1,37 @@
+// Copyright 2018 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.applovin.mediation;
 
+import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.APPLOVIN_SDK_ERROR_DOMAIN;
+import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_CHILD_USER;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_DOMAIN;
+import static com.google.android.gms.ads.RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE;
+import static com.google.android.gms.ads.RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE;
 
 import android.content.Context;
-import android.content.pm.ApplicationInfo;
-import android.content.pm.PackageManager;
 import android.os.Bundle;
-import android.text.TextUtils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.applovin.sdk.AppLovinAdSize;
 import com.applovin.sdk.AppLovinErrorCodes;
-import com.applovin.sdk.AppLovinMediationProvider;
-import com.applovin.sdk.AppLovinSdk;
-import com.google.ads.mediation.applovin.AppLovinMediationAdapter;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.MediationUtils;
+import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import java.util.ArrayList;
 
 /**
@@ -26,9 +41,20 @@ public class AppLovinUtils {
 
   private static final String DEFAULT_ZONE = "";
 
+  @VisibleForTesting
+  public static final String ERROR_MSG_REASON_PREFIX =
+      "AppLovin SDK returned a load failure callback with reason: ";
+
   /**
-   * Keys for retrieving values from the server parameters.
+   * Error message when the user is a child.
+   *
+   * <p>See {@link ERROR_CHILD_USER} for more details.
    */
+  public static final String ERROR_MSG_CHILD_USER =
+      "MobileAds.getRequestConfiguration() indicates the user is a child. AppLovin SDK 13.0.0 or"
+          + " higher does not support child users.";
+
+  /** Keys for retrieving values from the server parameters. */
   public static class ServerParameterKeys {
 
     public static final String SDK_KEY = "sdkKey";
@@ -37,68 +63,6 @@ public class AppLovinUtils {
     // Private constructor
     private ServerParameterKeys() {
     }
-  }
-
-  /**
-   * Retrieves the appropriate instance of AppLovin's SDK from the SDK key given in the server
-   * parameters, or Android Manifest.
-   */
-  public static AppLovinSdk retrieveSdk(Bundle serverParameters, Context context) {
-    final String sdkKey =
-        (serverParameters != null) ? serverParameters.getString(ServerParameterKeys.SDK_KEY) : null;
-    final AppLovinSdk sdk;
-
-    if (!TextUtils.isEmpty(sdkKey)) {
-      sdk = AppLovinSdk.getInstance(sdkKey, AppLovinMediationAdapter.getSdkSettings(), context);
-    } else {
-      sdk = AppLovinSdk.getInstance(AppLovinMediationAdapter.getSdkSettings(), context);
-    }
-
-    sdk.setPluginVersion(BuildConfig.ADAPTER_VERSION);
-    sdk.setMediationProvider(AppLovinMediationProvider.ADMOB);
-    return sdk;
-  }
-
-  /**
-   * Retrieves the AppLovin SDK key.
-   *
-   * @param context          the context object.
-   * @param serverParameters the ad request's server parameters.
-   * @return the AppLovin SDK key.
-   */
-  @Nullable
-  public static String retrieveSdkKey(@NonNull Context context, @Nullable Bundle serverParameters) {
-    String sdkKey = null;
-
-    // Prioritize the SDK Key contained in the server parameters, if any.
-    if (serverParameters != null) {
-      sdkKey = serverParameters.getString(ServerParameterKeys.SDK_KEY);
-    }
-
-    // Fetch the SDK key in the AndroidManifest.xml file if no SDK key is found in the server
-    // parameters.
-    if (TextUtils.isEmpty(sdkKey)) {
-      final Bundle metaData = retrieveMetadata(context);
-      if (metaData != null) {
-        sdkKey = metaData.getString("applovin.sdk.key");
-      }
-    }
-
-    return sdkKey;
-  }
-
-  private static Bundle retrieveMetadata(Context context) {
-    try {
-      final PackageManager pm = context.getPackageManager();
-      final ApplicationInfo ai =
-          pm.getApplicationInfo(context.getPackageName(), PackageManager.GET_META_DATA);
-
-      return ai.metaData;
-    } catch (PackageManager.NameNotFoundException ignored) {
-      // Metadata not found. Just continue and return null.
-    }
-
-    return null;
   }
 
   /**
@@ -111,6 +75,19 @@ public class AppLovinUtils {
     } else {
       return DEFAULT_ZONE;
     }
+  }
+
+  /**
+   * Enable the ability to load a second ad for an ad unit after the first ad for that ad unit has
+   * loaded even if the first ad hasn't been shown yet.
+   *
+   * <p>This is always set to true.
+   *
+   * <p>TODO(b/391643963): Remove the code branches for the case where this is false since this is
+   * always true now.
+   */
+  public static boolean isMultiAdsEnabled() {
+    return true;
   }
 
   /**
@@ -180,8 +157,8 @@ public class AppLovinUtils {
       default: // fall out
     }
 
-    return new AdError(applovinErrorCode,
-        "AppLovin SDK returned a load failure callback with reason: " + reason, ERROR_DOMAIN);
+    return new AdError(
+        applovinErrorCode, ERROR_MSG_REASON_PREFIX + reason, APPLOVIN_SDK_ERROR_DOMAIN);
   }
 
   /**
@@ -201,5 +178,23 @@ public class AppLovinUtils {
       return AppLovinAdSize.LEADER;
     }
     return null;
+  }
+
+  /** Returns whether the user has been tagged as a child or not. */
+  public static boolean isChildUser() {
+    RequestConfiguration requestConfiguration = MobileAds.getRequestConfiguration();
+    return requestConfiguration.getTagForChildDirectedTreatment()
+            == TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
+        || requestConfiguration.getTagForUnderAgeOfConsent() == TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE;
+  }
+
+  /**
+   * Returns error object that should be passed back through callback when a request is made for a
+   * user who is a child.
+   *
+   * <p>See {@link ERROR_CHILD_USER} for more details.
+   */
+  public static AdError getChildUserError() {
+    return new AdError(ERROR_CHILD_USER, ERROR_MSG_CHILD_USER, ERROR_DOMAIN);
   }
 }

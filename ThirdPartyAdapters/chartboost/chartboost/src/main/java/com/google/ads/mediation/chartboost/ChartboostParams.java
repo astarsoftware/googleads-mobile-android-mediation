@@ -1,4 +1,4 @@
-// Copyright 2016 Google Inc.
+// Copyright 2016 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,96 +14,75 @@
 
 package com.google.ads.mediation.chartboost;
 
-import com.chartboost.sdk.Banner.BannerSize;
-import com.chartboost.sdk.CBLocation;
-import com.chartboost.sdk.Chartboost.CBFramework;
+import static com.google.ads.mediation.chartboost.ChartboostAdapterUtils.LOCATION_DEFAULT;
 
 /**
  * The {@link ChartboostParams} class is used to send network parameters and mediation/network
- * extras from {@link ChartboostAdapter} and {@link ChartboostMediationAdapter} to {@link
- * ChartboostSingleton}.
+ * extras from {@link ChartboostMediationAdapter}
  */
 public class ChartboostParams {
 
-  /** Chartboost App ID. */
+  /**
+   * Chartboost App ID.
+   */
   private String appId;
 
-  /** Chartboost App Signature. */
+  /**
+   * Chartboost App Signature.
+   */
   private String appSignature;
 
-  /** Charboost location used to load ads. */
+  /**
+   * Charboost location used to load ads.
+   */
   private String cbLocation;
 
-  /** Chartboost readable framework. */
-  private CBFramework cbFramework;
-
-  /** The version name for {@link #cbFramework}. */
-  private String cbFrameworkVersion;
-
-  /** Size of the Chartboost banner required to create a banner */
-  private BannerSize cbBannerSize;
-  /** Default constructor, sets a default value for {@link #cbLocation}. */
+  /**
+   * Default constructor, sets a default value for {@link #cbLocation}.
+   */
   public ChartboostParams() {
-    this.cbLocation = CBLocation.LOCATION_DEFAULT;
+    this.cbLocation = LOCATION_DEFAULT;
   }
 
-  /** @return {@link #appId}. */
+  /**
+   * @return {@link #appId}.
+   */
   public String getAppId() {
     return appId;
   }
 
-  /** @param appId set to {@link #appId}. */
+  /**
+   * @param appId set to {@link #appId}.
+   */
   public void setAppId(String appId) {
     this.appId = appId;
   }
 
-  /** @return {@link #appSignature}. */
+  /**
+   * @return {@link #appSignature}.
+   */
   public String getAppSignature() {
     return appSignature;
   }
 
-  /** @param appSignature set to {@link #appSignature} */
+  /**
+   * @param appSignature set to {@link #appSignature}
+   */
   public void setAppSignature(String appSignature) {
     this.appSignature = appSignature;
   }
 
-  /** @return {@link #cbLocation}. */
+  /**
+   * @return {@link #cbLocation}.
+   */
   public String getLocation() {
     return cbLocation;
   }
 
-  /** @param location set to {@link #cbLocation}. */
+  /**
+   * @param location set to {@link #cbLocation}.
+   */
   public void setLocation(String location) {
     this.cbLocation = location;
-  }
-
-  /** @return {@link #cbFramework}. */
-  public CBFramework getFramework() {
-    return cbFramework;
-  }
-
-  /** @param framework set to {@link #cbFramework}. */
-  public void setFramework(CBFramework framework) {
-    this.cbFramework = framework;
-  }
-
-  /** @return {@link #cbFrameworkVersion}. */
-  public String getFrameworkVersion() {
-    return cbFrameworkVersion;
-  }
-
-  /** @param version set to {@link #cbFrameworkVersion}. */
-  public void setFrameworkVersion(String version) {
-    this.cbFrameworkVersion = version;
-  }
-
-  /** @return {@link #cbBannerSize}. */
-  public BannerSize getBannerSize() {
-    return cbBannerSize;
-  }
-
-  /** @param bannerSize {@link #cbBannerSize}. */
-  public void setBannerSize(BannerSize bannerSize) {
-    this.cbBannerSize = bannerSize;
   }
 }

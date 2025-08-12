@@ -1,3 +1,17 @@
+// Copyright 2017 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.ads.mediation.mytarget;
 
 import android.content.Context;
@@ -7,6 +21,7 @@ import android.util.DisplayMetrics;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.VisibleForTesting;
 import com.google.android.gms.ads.AdSize;
 import com.my.target.ads.MyTargetView;
 import com.my.target.common.CustomParams;
@@ -16,7 +31,7 @@ import com.my.target.common.CustomParams;
  */
 class MyTargetTools {
 
-  private static final String KEY_SLOT_ID = "slotId";
+  @VisibleForTesting protected static final String KEY_SLOT_ID = "slotId";
   @NonNull
   static final String PARAM_MEDIATION_KEY = "mediation";
   @NonNull
@@ -97,10 +112,10 @@ class MyTargetTools {
         / DisplayMetrics.DENSITY_DEFAULT));
   }
 
-  public static void handleMediationExtras(@NonNull String tag, @Nullable Bundle mediationExtras, @NonNull CustomParams customParams) {
+  public static void handleMediationExtras(@NonNull String tag, @Nullable Bundle mediationExtras,
+      @NonNull CustomParams customParams) {
     if (mediationExtras == null) {
       Log.d(tag, "Mediation extras is null");
-
       return;
     }
 
@@ -146,9 +161,9 @@ class MyTargetTools {
         final String value = String.valueOf(object);
         customParams.setCustomParam(key, value);
         Log.d(tag, "Add string custom param from mediation extra: " + key + ", " + object);
-      }
-      else {
-        Log.d(tag, "Mediation extra has non-primitive extra that will not be added: " + key + ", " + object);
+      } else {
+        Log.d(tag, "Mediation extra has non-primitive extra that will not be added: " + key + ", "
+            + object);
       }
     }
   }

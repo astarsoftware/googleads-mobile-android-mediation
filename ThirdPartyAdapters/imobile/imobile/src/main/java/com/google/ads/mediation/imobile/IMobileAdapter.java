@@ -1,3 +1,17 @@
+// Copyright 2019 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.ads.mediation.imobile;
 
 import static com.google.ads.mediation.imobile.IMobileMediationAdapter.ERROR_BANNER_SIZE_MISMATCH;
@@ -11,6 +25,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.FrameLayout;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.MediationUtils;
@@ -65,18 +81,14 @@ public final class IMobileAdapter implements MediationBannerAdapter, MediationIn
 
   // region - Methods for banner ads.
   @Override
-  public void requestBannerAd(
-      Context context,
-      MediationBannerListener listener,
-      Bundle serverParameters,
-      AdSize adSize,
-      MediationAdRequest mediationAdRequest,
-      Bundle mediationExtras) {
+  public void requestBannerAd(@NonNull Context context, @NonNull MediationBannerListener listener,
+      @NonNull Bundle serverParameters, @NonNull AdSize adSize,
+      @NonNull MediationAdRequest mediationAdRequest, @Nullable Bundle mediationExtras) {
 
     // Validate Context.
     if (!(context instanceof Activity)) {
-      AdError error = new AdError(ERROR_REQUIRES_ACTIVITY_CONTEXT,
-          "Context is not an Activity.", ERROR_DOMAIN);
+      AdError error = new AdError(ERROR_REQUIRES_ACTIVITY_CONTEXT, "Context is not an Activity.",
+          ERROR_DOMAIN);
       Log.w(TAG, error.getMessage());
       listener.onAdFailedToLoad(this, error);
       return;
@@ -86,7 +98,7 @@ public final class IMobileAdapter implements MediationBannerAdapter, MediationIn
     AdSize supportedAdSize = MediationUtils.findClosestSize(context, adSize, supportedSizes);
     if (supportedAdSize == null) {
       AdError error = new AdError(ERROR_BANNER_SIZE_MISMATCH,
-          "Ad size" + adSize.toString() + "is not supported.", ERROR_DOMAIN);
+          "Ad size " + adSize + " is not supported.", ERROR_DOMAIN);
       Log.w(TAG, error.getMessage());
       listener.onAdFailedToLoad(this, error);
       return;
@@ -103,7 +115,7 @@ public final class IMobileAdapter implements MediationBannerAdapter, MediationIn
     Activity activity = (Activity) context;
 
     // Call i-mobile SDK.
-    Log.d(TAG, "Requesting banner with ad size: " + adSize.toString());
+    Log.d(TAG, "Requesting banner with ad size: " + adSize);
     ImobileSdkAd.registerSpotInline(activity, publisherId, mediaId, spotId);
     ImobileSdkAd.start(spotId);
     ImobileSdkAd.setImobileSdkAdListener(
@@ -166,6 +178,7 @@ public final class IMobileAdapter implements MediationBannerAdapter, MediationIn
             / iMobileAdSize.getHeightInPixels(context)));
   }
 
+  @NonNull
   @Override
   public View getBannerView() {
     return bannerView;
@@ -191,12 +204,9 @@ public final class IMobileAdapter implements MediationBannerAdapter, MediationIn
 
   // region - Methods for interstitial ads.
   @Override
-  public void requestInterstitialAd(
-      Context context,
-      MediationInterstitialListener listener,
-      Bundle serverParameters,
-      MediationAdRequest mediationAdRequest,
-      Bundle mediationExtras) {
+  public void requestInterstitialAd(@NonNull Context context,
+      @NonNull MediationInterstitialListener listener, @NonNull Bundle serverParameters,
+      @NonNull MediationAdRequest mediationAdRequest, @Nullable Bundle mediationExtras) {
 
     // Validate Context.
     if (!(context instanceof Activity)) {

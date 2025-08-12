@@ -8,20 +8,22 @@ ext {
     // String property to store the proper name of the mediation network adapter.
     adapterName = "AppLovin"
     // String property to store version name.
-    stringVersion = "10.3.5.0"
+    stringVersion = "13.3.1.1"
     // String property to store group id.
     stringGroupId = "com.google.ads.mediation"
 }
 
 android {
-    compileSdkVersion 30
+    namespace 'com.applovin.mediation'
+    compileSdk 34
     defaultConfig {
-        minSdkVersion 16
-        targetSdkVersion 30
-        versionCode 1030400
+        minSdkVersion 23
+        targetSdk 33
+        versionCode 13030101
         versionName stringVersion
         buildConfigField("String", "ADAPTER_VERSION", "\"${stringVersion}\"")
     }
+    buildFeatures.buildConfig true
     buildTypes {
         release {
             minifyEnabled false
@@ -31,9 +33,9 @@ android {
 }
 
 dependencies {
-    implementation 'com.applovin:applovin-sdk:10.3.5'
-    implementation 'androidx.annotation:annotation:1.3.0'
-    implementation 'com.google.android.gms:play-services-ads:20.4.0'
+    implementation 'com.applovin:applovin-sdk:13.3.1'
+    implementation 'androidx.annotation:annotation:1.5.0'
+    implementation 'com.google.android.gms:play-services-ads:24.4.0'
 }
 
 /**
@@ -73,7 +75,7 @@ publishing {
                 licenses {
                     license {
                         name = 'Apache-2.0'
-                        url = 'https://github.com/googleads/googleads-mobile-android-mediation/blob/master/LICENSE'
+                        url = 'https://github.com/googleads/googleads-mobile-android-mediation/blob/main/LICENSE'
                         distribution = 'repo'
                     }
                 }

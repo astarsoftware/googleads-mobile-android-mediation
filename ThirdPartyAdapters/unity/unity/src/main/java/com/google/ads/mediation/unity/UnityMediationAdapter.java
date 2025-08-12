@@ -1,4 +1,4 @@
-// Copyright 2020 Google Inc.
+// Copyright 2019 Google LLC
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,23 +14,35 @@
 
 package com.google.ads.mediation.unity;
 
-import static com.google.ads.mediation.unity.UnityAdsAdapterUtils.createAdapterError;
 import static com.google.ads.mediation.unity.UnityAdsAdapterUtils.createSDKError;
+import static com.google.ads.mediation.unity.UnityAdsAdapterUtils.getAdFormat;
 
+import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import androidx.annotation.IntDef;
+import androidx.annotation.NonNull;
+import androidx.annotation.VisibleForTesting;
 import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.mediation.Adapter;
+import com.google.android.gms.ads.AdFormat;
+import com.google.android.gms.ads.VersionInfo;
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
+import com.google.android.gms.ads.mediation.MediationBannerAd;
+import com.google.android.gms.ads.mediation.MediationBannerAdCallback;
+import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration;
 import com.google.android.gms.ads.mediation.MediationConfiguration;
+import com.google.android.gms.ads.mediation.MediationInterstitialAd;
+import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback;
+import com.google.android.gms.ads.mediation.MediationInterstitialAdConfiguration;
 import com.google.android.gms.ads.mediation.MediationRewardedAd;
 import com.google.android.gms.ads.mediation.MediationRewardedAdCallback;
 import com.google.android.gms.ads.mediation.MediationRewardedAdConfiguration;
-import com.google.android.gms.ads.mediation.VersionInfo;
+import com.google.android.gms.ads.mediation.rtb.RtbAdapter;
+import com.google.android.gms.ads.mediation.rtb.RtbSignalData;
+import com.google.android.gms.ads.mediation.rtb.SignalCallbacks;
 import com.unity3d.ads.IUnityAdsInitializationListener;
 import com.unity3d.ads.UnityAds;
 import java.lang.annotation.Retention;
@@ -42,7 +54,7 @@ import java.util.List;
  * The {@link UnityMediationAdapter} is used to initialize the Unity Ads SDK, load rewarded video
  * ads from Unity Ads and mediate the callbacks between Google Mobile Ads SDK and Unity Ads SDK.
  */
-public class UnityMediationAdapter extends Adapter {
+public class UnityMediationAdapter extends RtbAdapter {
 
   /**
    * TAG used for logging messages.
@@ -50,6 +62,12 @@ public class UnityMediationAdapter extends Adapter {
   static final String TAG = UnityMediationAdapter.class.getSimpleName();
 
   // region Error Codes
+  // Unity Ads adapter error domain.
+  public static final String ADAPTER_ERROR_DOMAIN = "com.google.ads.mediation.unity";
+
+  // Unity Ads SDK error domain.
+  public static final String SDK_ERROR_DOMAIN = "com.unity3d.ads";
+
   @Retention(RetentionPolicy.SOURCE)
   @IntDef(
       value = {
@@ -60,10 +78,9 @@ public class UnityMediationAdapter extends Adapter {
           ERROR_CONTEXT_NOT_ACTIVITY,
           ERROR_AD_NOT_READY,
           ERROR_UNITY_ADS_NOT_SUPPORTED,
-          ERROR_AD_ALREADY_LOADING,
           ERROR_FINISH,
           ERROR_BANNER_SIZE_MISMATCH,
-          INITIALIZATION_FAILURE
+          ERROR_INITIALIZATION_FAILURE
       })
   @interface AdapterError {
 
@@ -75,12 +92,12 @@ public class UnityMediationAdapter extends Adapter {
   static final int ERROR_INVALID_SERVER_PARAMETERS = 101;
 
   /**
-   * UnityAds returned a placement with a {@link PlacementStateNO_FILL} state.
+   * UnityAds returned a placement with no fill.
    */
   static final int ERROR_PLACEMENT_STATE_NO_FILL = 102;
 
   /**
-   * UnityAds returned a placement with a {@link PlacementState#DISABLED} state.
+   * UnityAds returned a disabled placement.
    */
   static final int ERROR_PLACEMENT_STATE_DISABLED = 103;
 
@@ -89,6 +106,7 @@ public class UnityMediationAdapter extends Adapter {
    */
   static final int ERROR_NULL_CONTEXT = 104;
 
+  /** Tried to load or show an ad with a non-Activity context. */
   static final int ERROR_CONTEXT_NOT_ACTIVITY = 105;
 
   /**
@@ -102,12 +120,7 @@ public class UnityMediationAdapter extends Adapter {
   static final int ERROR_UNITY_ADS_NOT_SUPPORTED = 107;
 
   /**
-   * UnityAds can only load 1 ad per placement at a time.
-   */
-  static final int ERROR_AD_ALREADY_LOADING = 108;
-
-  /**
-   * UnityAds finished with a {@link FinishState#ERROR} state.
+   * UnityAds finished with an error state.
    */
   static final int ERROR_FINISH = 109;
 
@@ -119,8 +132,16 @@ public class UnityMediationAdapter extends Adapter {
   /**
    * UnityAds returned an initialization error.
    */
-  static final int INITIALIZATION_FAILURE = 111;
-  // endregion
+  static final int ERROR_INITIALIZATION_FAILURE = 111;
+
+  static final String ERROR_MSG_MISSING_PARAMETERS = "Missing or invalid server parameters.";
+
+  static final String ERROR_MSG_NON_ACTIVITY =
+      "Unity Ads requires an Activity context to load ads.";
+
+  static final String ERROR_MSG_CONTEXT_NULL = "Activity context is null.";
+
+  static final String ERROR_MSG_INITIALIZATION_FAILURE = "Unity Ads initialization failed: [%s] %s";
 
   /**
    * Key to obtain Game ID, required for loading Unity Ads.
@@ -134,14 +155,76 @@ public class UnityMediationAdapter extends Adapter {
    */
   static final String KEY_PLACEMENT_ID = "zoneId";
 
+  static final String KEY_WATERMARK = "watermark";
+  private final UnityInitializer unityInitializer;
+
+  private final UnityBannerViewFactory unityBannerViewFactory;
+
+  private final UnityAdsLoader unityAdsLoader;
+
+  /** UnityBannerAd instance. */
+  private UnityMediationBannerAd bannerAd;
+
+  /** UnityBannerAd instance. */
+  private UnityMediationBannerAd bannerRtbAd;
+
+  /** UnityInterstitialAd instance. */
+  private UnityInterstitialAd interstitialAd;
+
+  /** UnityInterstitialAd instance used for RTB. */
+  private UnityInterstitialAd interstitialRtbAd;
+
   /**
    * UnityRewardedAd instance.
    */
   private UnityRewardedAd rewardedAd;
 
-  /**
-   * {@link Adapter} implementation
-   */
+  /** UnityRewardedAd instance used for RTB. */
+  private UnityRewardedAd rewardedRtbAd;
+
+  public UnityMediationAdapter() {
+    unityInitializer = UnityInitializer.getInstance();
+    unityBannerViewFactory = new UnityBannerViewFactory();
+    this.unityAdsLoader = new UnityAdsLoader();
+  }
+
+  @Override
+  public void collectSignals(
+      @NonNull RtbSignalData rtbSignalData, @NonNull SignalCallbacks signalCallbacks) {
+    // For banner ad format, Unity Ads SDK requires an activity context to load the banner ad. So,
+    // fail here so that Unity bidder will not bid if the ad request was made with a non-activity
+    // context.
+    if (getAdFormat(rtbSignalData) == AdFormat.BANNER
+        && !(rtbSignalData.getContext() instanceof Activity)) {
+      signalCallbacks.onFailure(
+          new AdError(
+              ERROR_CONTEXT_NOT_ACTIVITY,
+              "Unity Ads RTB Banner ads require activity context",
+              ADAPTER_ERROR_DOMAIN));
+      return;
+    }
+
+    UnityAds.getToken(
+        token -> {
+          if (token == null) {
+            token = "";
+          }
+          signalCallbacks.onSuccess(token);
+        });
+  }
+
+  @VisibleForTesting
+  UnityMediationAdapter(
+      UnityInitializer unityInitializer,
+      UnityBannerViewFactory unityBannerViewFactory,
+      UnityAdsLoader unityAdsLoader) {
+    this.unityInitializer = unityInitializer;
+    this.unityBannerViewFactory = unityBannerViewFactory;
+    this.unityAdsLoader = unityAdsLoader;
+  }
+
+  /** {@link RtbAdapter} implementation */
+  @NonNull
   @Override
   public VersionInfo getVersionInfo() {
     String versionString = BuildConfig.ADAPTER_VERSION;
@@ -161,6 +244,7 @@ public class UnityMediationAdapter extends Adapter {
     return new VersionInfo(0, 0, 0);
   }
 
+  @NonNull
   @Override
   public VersionInfo getSDKVersionInfo() {
     String versionString = UnityAds.getVersion();
@@ -181,9 +265,9 @@ public class UnityMediationAdapter extends Adapter {
   }
 
   @Override
-  public void initialize(Context context,
-      final InitializationCompleteCallback initializationCompleteCallback,
-      List<MediationConfiguration> mediationConfigurations) {
+  public void initialize(@NonNull Context context,
+      @NonNull final InitializationCompleteCallback initializationCompleteCallback,
+      @NonNull List<MediationConfiguration> mediationConfigurations) {
     HashSet<String> gameIDs = new HashSet<>();
     for (MediationConfiguration configuration : mediationConfigurations) {
       Bundle serverParameters = configuration.getServerParameters();
@@ -200,21 +284,23 @@ public class UnityMediationAdapter extends Adapter {
       gameID = gameIDs.iterator().next();
 
       if (count > 1) {
-        String message = String.format("Multiple '%s' entries found: %s. " +
-                "Using '%s' to initialize the UnityAds SDK",
-            KEY_GAME_ID, gameIDs.toString(), gameID);
+        String message = String
+            .format("Multiple '%s' entries found: %s. Using '%s' to initialize the UnityAds SDK",
+                KEY_GAME_ID, gameIDs, gameID);
         Log.w(TAG, message);
       }
     }
 
     if (TextUtils.isEmpty(gameID)) {
-      String adapterError = createAdapterError(ERROR_INVALID_SERVER_PARAMETERS,
-          "Missing or Invalid Game ID.");
-      initializationCompleteCallback.onInitializationFailed(adapterError);
+      AdError initializationError = new AdError(ERROR_INVALID_SERVER_PARAMETERS,
+          "Missing or invalid Game ID.", ADAPTER_ERROR_DOMAIN);
+      initializationCompleteCallback.onInitializationFailed(initializationError.toString());
       return;
     }
 
-    UnityInitializer.getInstance().initializeUnityAds(context, gameID,
+    unityInitializer.initializeUnityAds(
+        context,
+        gameID,
         new IUnityAdsInitializationListener() {
           @Override
           public void onInitializationComplete() {
@@ -223,11 +309,16 @@ public class UnityMediationAdapter extends Adapter {
           }
 
           @Override
-          public void onInitializationFailed(UnityAds.UnityAdsInitializationError
-              unityAdsInitializationError, String errorMessage) {
-            AdError adError = createSDKError(unityAdsInitializationError,
-                "Unity Ads initialization failed: [" +
-                    unityAdsInitializationError + "] " + errorMessage);
+          public void onInitializationFailed(
+              UnityAds.UnityAdsInitializationError unityAdsInitializationError,
+              String errorMessage) {
+            AdError adError =
+                createSDKError(
+                    unityAdsInitializationError,
+                    String.format(
+                        ERROR_MSG_INITIALIZATION_FAILURE,
+                        unityAdsInitializationError,
+                        errorMessage));
             Log.d(TAG, adError.toString());
             initializationCompleteCallback.onInitializationFailed(adError.toString());
           }
@@ -235,11 +326,62 @@ public class UnityMediationAdapter extends Adapter {
   }
 
   @Override
-  public void loadRewardedAd(MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
-      MediationAdLoadCallback<MediationRewardedAd,
-          MediationRewardedAdCallback> mediationAdLoadCallback) {
-    rewardedAd = new UnityRewardedAd();
-    rewardedAd.load(mediationRewardedAdConfiguration, mediationAdLoadCallback);
+  public void loadRewardedAd(
+      @NonNull MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
+      @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
+          mediationAdLoadCallback) {
+    rewardedAd =
+        new UnityRewardedAd(
+            mediationRewardedAdConfiguration,
+            mediationAdLoadCallback,
+            unityInitializer,
+            unityAdsLoader);
+    rewardedAd.loadAd();
   }
 
+  @Override
+  public void loadBannerAd(
+      @NonNull MediationBannerAdConfiguration mediationBannerAdConfiguration,
+      @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback) {
+    bannerAd =
+        new UnityMediationBannerAd(
+            mediationBannerAdConfiguration, callback, unityInitializer, unityBannerViewFactory, unityAdsLoader);
+    bannerAd.loadAd();
+  }
+
+  @Override
+  public void loadRtbBannerAd(@NonNull MediationBannerAdConfiguration adConfiguration,
+      @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback) {
+    bannerRtbAd = new UnityMediationBannerAd(adConfiguration, callback, unityInitializer, unityBannerViewFactory, unityAdsLoader);
+    bannerRtbAd.loadAd();
+  }
+
+  @Override
+  public void loadInterstitialAd(
+      MediationInterstitialAdConfiguration adConfiguration,
+      MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback> callback) {
+    interstitialAd =
+        new UnityInterstitialAd(adConfiguration, callback, unityInitializer, unityAdsLoader);
+    interstitialAd.loadAd();
+  }
+
+  @Override
+  public final void loadRtbInterstitialAd(
+      @NonNull MediationInterstitialAdConfiguration adConfiguration,
+      @NonNull
+          MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
+              callback) {
+    interstitialRtbAd =
+        new UnityInterstitialAd(adConfiguration, callback, unityInitializer, unityAdsLoader);
+    interstitialRtbAd.loadAd();
+  }
+
+  @Override
+  public void loadRtbRewardedAd(
+      @NonNull MediationRewardedAdConfiguration adConfiguration,
+      @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback> callback) {
+    rewardedRtbAd =
+        new UnityRewardedAd(adConfiguration, callback, unityInitializer, unityAdsLoader);
+    rewardedRtbAd.loadAd();
+  }
 }

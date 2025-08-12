@@ -1,3 +1,17 @@
+// Copyright 2017 Google LLC
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 package com.google.ads.mediation.inmobi;
 
 import android.content.res.Resources;
@@ -7,6 +21,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.util.DisplayMetrics;
+import androidx.annotation.VisibleForTesting;
 import java.io.InputStream;
 import java.net.URL;
 import java.util.HashMap;
@@ -27,14 +42,22 @@ class ImageDownloaderAsyncTask extends AsyncTask<Object, Void, HashMap<String, D
 
   static final String KEY_ICON = "icon_key";
 
-  private static final long DRAWABLE_FUTURE_TIMEOUT_SECONDS = 10;
+  private final long drawableFutureTimeoutSeconds;
 
-  private final DrawableDownloadListener mListener;
+  private final DrawableDownloadListener listener;
 
-  private final InMobiMemoryCache mMemoryCache = new InMobiMemoryCache();
+  @VisibleForTesting
+  final InMobiMemoryCache memoryCache = new InMobiMemoryCache();
 
   public ImageDownloaderAsyncTask(DrawableDownloadListener listener) {
-    mListener = listener;
+    this.listener = listener;
+    this.drawableFutureTimeoutSeconds = 10;
+  }
+
+  @VisibleForTesting
+  ImageDownloaderAsyncTask(DrawableDownloadListener listener, Long timeout) {
+    this.listener = listener;
+    this.drawableFutureTimeoutSeconds = timeout;
   }
 
   /**
@@ -57,12 +80,12 @@ class ImageDownloaderAsyncTask extends AsyncTask<Object, Void, HashMap<String, D
     Drawable iconDrawable;
 
     try {
-      if (null != mMemoryCache.get(String.valueOf(urlsMap.get(KEY_ICON)))) {
-        iconDrawable = mMemoryCache.get(String.valueOf(urlsMap.get(KEY_ICON)));
+      if (null != memoryCache.get(String.valueOf(urlsMap.get(KEY_ICON)))) {
+        iconDrawable = memoryCache.get(String.valueOf(urlsMap.get(KEY_ICON)));
       } else {
         iconDrawable = getDrawableFuture(urlsMap.get(KEY_ICON), executorService).get
-            (DRAWABLE_FUTURE_TIMEOUT_SECONDS, TimeUnit.SECONDS);
-        mMemoryCache.put(String.valueOf(urlsMap.get(KEY_ICON)), iconDrawable);
+            (drawableFutureTimeoutSeconds, TimeUnit.SECONDS);
+        memoryCache.put(String.valueOf(urlsMap.get(KEY_ICON)), iconDrawable);
       }
 
       HashMap<String, Drawable> drawableHashMap = new HashMap<>();
@@ -101,16 +124,15 @@ class ImageDownloaderAsyncTask extends AsyncTask<Object, Void, HashMap<String, D
    * @param stringDrawableHashMap The result of the operation computed by {@link #doInBackground}.
    * @see #onPreExecute
    * @see #doInBackground
-   * @see #onCancelled(Object)
    */
   @Override
   protected void onPostExecute(HashMap<String, Drawable> stringDrawableHashMap) {
     super.onPostExecute(stringDrawableHashMap);
     if (stringDrawableHashMap != null) {
       // Image download successful, send on success callback.
-      mListener.onDownloadSuccess(stringDrawableHashMap);
+      listener.onDownloadSuccess(stringDrawableHashMap);
     } else {
-      mListener.onDownloadFailure();
+      listener.onDownloadFailure();
     }
   }
 
