@@ -26,6 +26,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import androidx.annotation.NonNull;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.ads.mediation.vungle.VungleFactory;
 import com.google.ads.mediation.vungle.VungleInitializer;
 import com.google.ads.mediation.vungle.VungleMediationAdapter;
@@ -41,6 +44,8 @@ import com.vungle.ads.VungleAdSize;
 import com.vungle.ads.VungleBannerView;
 import com.vungle.ads.VungleError;
 import com.vungle.mediation.VungleInterstitialAdapter;
+
+import java.util.Map;
 
 public class VungleRtbBannerAd implements MediationBannerAd, BannerAdListener {
 
@@ -162,6 +167,11 @@ public class VungleRtbBannerAd implements MediationBannerAd, BannerAdListener {
   @Override
   public void onAdLoaded(@NonNull BaseAd baseAd) {
     mediationBannerAdCallback = mediationAdLoadCallback.onSuccess(this);
+
+	  // astar
+	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+	  Map<String,Object> networkInfo = VungleMediationAdapter.getNetworkInfo(baseAd);
+	  adTracker.adDidLoadForNetwork("liftoff", "admob", "banner", networkInfo);
   }
 
   @Override

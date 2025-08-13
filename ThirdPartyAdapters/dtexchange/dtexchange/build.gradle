@@ -121,7 +121,7 @@ dependencies {
     implementation 'androidx.annotation:annotation:1.5.0'
     implementation 'com.google.android.gms:play-services-ads:24.5.0'
 
-    testImplementation project(':adaptertestkit')
+    //testImplementation project(':adaptertestkit')
     testImplementation "org.jacoco:org.jacoco.core:$jacocoVersion"
     testImplementation 'junit:junit:4.13.2'
     testImplementation 'org.jetbrains.kotlin:kotlin-stdlib:2.1.10'
@@ -133,6 +133,7 @@ dependencies {
     testImplementation 'androidx.test.ext:junit:1.1.5'
     testImplementation 'org.mockito.kotlin:mockito-kotlin:5.1.0'
 
+	implementation project(':Libraries:Java:Android:libAndroid')
 }
 
 /**

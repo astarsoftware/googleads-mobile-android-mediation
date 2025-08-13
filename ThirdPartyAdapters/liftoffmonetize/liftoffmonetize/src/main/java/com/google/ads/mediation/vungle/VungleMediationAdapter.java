@@ -65,8 +65,11 @@ import com.vungle.ads.VungleError;
 import com.vungle.mediation.BuildConfig;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 
 /**
  * Mediation network adapter for Liftoff Monetize.
@@ -580,5 +583,13 @@ public class VungleMediationAdapter extends RtbAdapter implements MediationRewar
       }
     }
     return false;
+  }
+
+  public static Map<String,Object> getNetworkInfo(BaseAd baseAd) {
+	  Map<String,Object> networkInfo = new TreeMap<>();
+	  networkInfo.put("creative_id", baseAd.getCreativeId() != null ? baseAd.getCreativeId() : "");
+	  networkInfo.put("placement_id", baseAd.getPlacementId() != null ? baseAd.getPlacementId() : "");
+	  networkInfo.put("event_id", baseAd.getEventId() != null ? baseAd.getEventId() : "");
+	  return networkInfo;
   }
 }

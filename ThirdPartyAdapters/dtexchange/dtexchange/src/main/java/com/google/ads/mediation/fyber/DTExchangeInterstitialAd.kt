@@ -3,11 +3,15 @@ package com.google.ads.mediation.fyber
 import android.app.Activity
 import android.content.Context
 import android.util.Log
+import com.astarsoftware.android.ads.AdNetworkTracker
+import com.astarsoftware.dependencies.DependencyInjector
+import com.fyber.inneractive.sdk.external.ImpressionData
 import com.fyber.inneractive.sdk.external.InneractiveAdManager
 import com.fyber.inneractive.sdk.external.InneractiveAdSpot
 import com.fyber.inneractive.sdk.external.InneractiveAdSpotManager
 import com.fyber.inneractive.sdk.external.InneractiveErrorCode
 import com.fyber.inneractive.sdk.external.InneractiveFullscreenAdEventsListener
+import com.fyber.inneractive.sdk.external.InneractiveFullscreenAdEventsListenerWithImpressionData
 import com.fyber.inneractive.sdk.external.InneractiveFullscreenUnitController
 import com.fyber.inneractive.sdk.external.InneractiveUnitController
 import com.google.android.gms.ads.AdError
@@ -28,7 +32,7 @@ class DTExchangeInterstitialAd(
 ) :
   MediationInterstitialAd,
   InneractiveAdSpot.RequestListener,
-  InneractiveFullscreenAdEventsListener {
+  InneractiveFullscreenAdEventsListenerWithImpressionData {
   private lateinit var adSpot: InneractiveAdSpot
   private var interstitialAdCallback: MediationInterstitialAdCallback? = null
 
@@ -83,9 +87,17 @@ class DTExchangeInterstitialAd(
     iAdSpot?.destroy()
   }
 
-  override fun onAdImpression(iAdSpot: InneractiveAdSpot?) {
+  override fun onAdImpression(p0: InneractiveAdSpot?) {
+  }
+
+  override fun onAdImpression(iAdSpot: InneractiveAdSpot?, impressionData: ImpressionData) {
     interstitialAdCallback?.onAdOpened()
     interstitialAdCallback?.reportAdImpression()
+
+	  // astar
+	  val adTracker: AdNetworkTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker::class.java)
+	  val networkInfo: Map<String, Any> = AstarUtils.getNetworkInfoFromImpressionData(impressionData)
+	  adTracker.adDidLoadForNetwork("digital_turbine", "admob", "interstitial", networkInfo)
   }
 
   override fun onAdClicked(iAdSpot: InneractiveAdSpot?) {

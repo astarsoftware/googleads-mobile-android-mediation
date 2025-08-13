@@ -3,10 +3,14 @@ package com.google.ads.mediation.fyber
 import android.util.Log
 import android.view.View
 import android.widget.RelativeLayout
+import com.astarsoftware.android.ads.AdNetworkTracker
+import com.astarsoftware.dependencies.DependencyInjector
+import com.fyber.inneractive.sdk.external.ImpressionData
 import com.fyber.inneractive.sdk.external.InneractiveAdManager
 import com.fyber.inneractive.sdk.external.InneractiveAdSpot
 import com.fyber.inneractive.sdk.external.InneractiveAdSpotManager
 import com.fyber.inneractive.sdk.external.InneractiveAdViewEventsListener
+import com.fyber.inneractive.sdk.external.InneractiveAdViewEventsListenerWithImpressionData
 import com.fyber.inneractive.sdk.external.InneractiveAdViewUnitController
 import com.fyber.inneractive.sdk.external.InneractiveErrorCode
 import com.fyber.inneractive.sdk.external.InneractiveUnitController
@@ -25,7 +29,7 @@ class DTExchangeBannerAd(
   private val mediationBannerAdConfiguration: MediationBannerAdConfiguration,
   private val mediationAdLoadCallback:
     MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>,
-) : MediationBannerAd, InneractiveAdSpot.RequestListener, InneractiveAdViewEventsListener {
+) : MediationBannerAd, InneractiveAdSpot.RequestListener, InneractiveAdViewEventsListenerWithImpressionData {
   private lateinit var adSpot: InneractiveAdSpot
   private lateinit var wrapperView: RelativeLayout
   private var bannerAdCallback: MediationBannerAdCallback? = null
@@ -89,8 +93,16 @@ class DTExchangeBannerAd(
 
   override fun getView(): View = wrapperView
 
-  override fun onAdImpression(adSpot: InneractiveAdSpot?) {
+  override fun onAdImpression(p0: InneractiveAdSpot?) {
+  }
+
+  override fun onAdImpression(adSpot: InneractiveAdSpot?, impressionData: ImpressionData) {
     bannerAdCallback?.reportAdImpression()
+
+	  // astar
+	  val adTracker: AdNetworkTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker::class.java)
+	  val networkInfo: Map<String, Any> = AstarUtils.getNetworkInfoFromImpressionData(impressionData)
+	  adTracker.adDidLoadForNetwork("digital_turbine", "admob", "banner", networkInfo)
   }
 
   override fun onAdClicked(adSpot: InneractiveAdSpot?) {
