@@ -28,6 +28,9 @@ import android.text.TextUtils;
 import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.VisibleForTesting;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
 import com.google.android.gms.ads.mediation.MediationInterstitialAd;
@@ -39,6 +42,9 @@ import com.unity3d.ironsourceads.interstitial.InterstitialAdListener;
 import com.unity3d.ironsourceads.interstitial.InterstitialAdLoader;
 import com.unity3d.ironsourceads.interstitial.InterstitialAdLoaderListener;
 import com.unity3d.ironsourceads.interstitial.InterstitialAdRequest;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Used to load ironSource RTB interstitial ads and mediate callbacks between Google Mobile Ads SDK
@@ -172,5 +178,12 @@ public class IronSourceRtbInterstitialAd
   public void onInterstitialAdLoaded(@NonNull InterstitialAd interstitialAd) {
     ad = interstitialAd;
     interstitialAdCallback = mediationAdLoadCallback.onSuccess(this);
+
+	  // astar
+	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+	  Map<String,Object> networkInfo = new HashMap<>();
+	  String creativeId = interstitialAd.getAdInfo().getAdId();
+	  networkInfo.put("creative_id", creativeId != null ? creativeId : "");
+	  adTracker.adDidLoadForNetwork("ironsource", "admob", "interstitial", networkInfo);
   }
 }
