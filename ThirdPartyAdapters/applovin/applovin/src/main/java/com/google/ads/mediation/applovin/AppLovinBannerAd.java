@@ -25,10 +25,13 @@ import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
+
 import androidx.annotation.NonNull;
+
 import com.applovin.adview.AppLovinAdView;
 import com.applovin.adview.AppLovinAdViewDisplayErrorCode;
 import com.applovin.adview.AppLovinAdViewEventListener;
+import com.applovin.impl.sdk.AppLovinAdBase;
 import com.applovin.mediation.AppLovinUtils;
 import com.applovin.mediation.AppLovinUtils.ServerParameterKeys;
 import com.applovin.sdk.AppLovinAd;
@@ -37,6 +40,8 @@ import com.applovin.sdk.AppLovinAdDisplayListener;
 import com.applovin.sdk.AppLovinAdLoadListener;
 import com.applovin.sdk.AppLovinAdSize;
 import com.applovin.sdk.AppLovinSdk;
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.ads.mediation.applovin.AppLovinInitializer.OnInitializeSuccessListener;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdSize;
@@ -167,6 +172,16 @@ public class AppLovinBannerAd
   public void adReceived(final AppLovinAd ad) {
     Log.d(TAG, "Banner did load ad for zone: " + zoneId);
     appLovinAdViewWrapper.renderAd(ad);
+
+	  //astar
+	  if(ad instanceof AppLovinAdBase) {
+		  AppLovinAdBase adBase = (AppLovinAdBase)ad;
+		  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		  adTracker.adDidLoadForNetwork("applovin", "admob", "banner",
+			  AstarAppLovinUtils.getNetworkInfo(adBase));
+
+	  }
+
     bannerAdCallback = mediationAdLoadCallback.onSuccess(this);
   }
 

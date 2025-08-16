@@ -18,12 +18,16 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
+
+import com.applovin.impl.sdk.AppLovinAdBase;
 import com.applovin.mediation.AppLovinUtils;
 import com.applovin.sdk.AppLovinAd;
 import com.applovin.sdk.AppLovinAdClickListener;
 import com.applovin.sdk.AppLovinAdDisplayListener;
 import com.applovin.sdk.AppLovinAdLoadListener;
 import com.applovin.sdk.AppLovinAdVideoPlaybackListener;
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
 import com.google.android.gms.ads.mediation.MediationInterstitialAd;
@@ -83,6 +87,15 @@ public abstract class AppLovinInterstitialRenderer
   public void adReceived(final AppLovinAd ad) {
     Log.d(TAG, "Interstitial did load ad for zone: " + zoneId);
     appLovinInterstitialAd = ad;
+
+	  //astar
+	  if(ad instanceof AppLovinAdBase) {
+		  AppLovinAdBase adBase = (AppLovinAdBase)ad;
+		  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+		  adTracker.adDidLoadForNetwork("applovin", "admob", "interstitial",
+			  AstarAppLovinUtils.getNetworkInfo(adBase));
+
+	  }
 
     interstitialAdCallback = interstitialAdLoadCallback.onSuccess(this);
   }
