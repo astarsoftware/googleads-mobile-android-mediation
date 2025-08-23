@@ -123,7 +123,7 @@ public class IronSourceRtbBannerAd
 	  Map<String,Object> networkInfo = new HashMap<>();
 	  String creativeId = bannerAdView.getAdInfo().getAdId();
 	  networkInfo.put("creative_id", creativeId != null ? creativeId : "");
-	  adTracker.adDidLoadForNetwork("ironsource", "admob", "interstitial", networkInfo);
+	  adTracker.adDidLoadForNetwork("ironsource", "admob", "banner", networkInfo);
   }
 
   @Override
