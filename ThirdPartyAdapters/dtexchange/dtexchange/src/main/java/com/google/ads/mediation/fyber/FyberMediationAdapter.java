@@ -22,19 +22,26 @@ import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
 import com.fyber.inneractive.sdk.external.BidTokenProvider;
+import com.fyber.inneractive.sdk.external.ImpressionData;
 import com.fyber.inneractive.sdk.external.InneractiveAdManager;
 import com.fyber.inneractive.sdk.external.InneractiveAdRequest;
 import com.fyber.inneractive.sdk.external.InneractiveAdSpot;
 import com.fyber.inneractive.sdk.external.InneractiveAdSpotManager;
 import com.fyber.inneractive.sdk.external.InneractiveAdViewEventsListener;
 import com.fyber.inneractive.sdk.external.InneractiveAdViewEventsListenerAdapter;
+import com.fyber.inneractive.sdk.external.InneractiveAdViewEventsListenerWithImpressionData;
 import com.fyber.inneractive.sdk.external.InneractiveAdViewUnitController;
 import com.fyber.inneractive.sdk.external.InneractiveErrorCode;
 import com.fyber.inneractive.sdk.external.InneractiveFullscreenAdEventsListener;
 import com.fyber.inneractive.sdk.external.InneractiveFullscreenAdEventsListenerAdapter;
+import com.fyber.inneractive.sdk.external.InneractiveFullscreenAdEventsListenerWithImpressionData;
 import com.fyber.inneractive.sdk.external.InneractiveFullscreenUnitController;
 import com.fyber.inneractive.sdk.external.InneractiveMediationName;
 import com.fyber.inneractive.sdk.external.InneractiveUnitController;
@@ -64,10 +71,12 @@ import com.google.android.gms.ads.mediation.MediationRewardedAdConfiguration;
 import com.google.android.gms.ads.mediation.rtb.RtbAdapter;
 import com.google.android.gms.ads.mediation.rtb.RtbSignalData;
 import com.google.android.gms.ads.mediation.rtb.SignalCallbacks;
+
 import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -461,14 +470,22 @@ public class FyberMediationAdapter extends RtbAdapter
    * @return the create events listener.
    */
   @NonNull
-  private InneractiveAdViewEventsListener createFyberAdViewListener() {
-    return new InneractiveAdViewEventsListenerAdapter() {
+  private InneractiveAdViewEventsListenerWithImpressionData createFyberAdViewListener() {
+    class CustomInneractiveAdViewEventsListenerAdapter extends InneractiveAdViewEventsListenerAdapter implements InneractiveAdViewEventsListenerWithImpressionData {
       @Override
       public void onAdImpression(InneractiveAdSpot adSpot) {
         // Nothing to report back here.
       }
 
-      @Override
+		@Override
+		public void onAdImpression(InneractiveAdSpot inneractiveAdSpot, ImpressionData impressionData) {
+			// astar
+			AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+			Map<String,Object> networkInfo = AstarUtils.getNetworkInfoFromImpressionData(impressionData);
+			adTracker.adDidLoadForNetwork("digital_turbine", "admob", "banner", networkInfo);
+		}
+
+		@Override
       public void onAdClicked(InneractiveAdSpot adSpot) {
         mediationBannerListener.onAdClicked(FyberMediationAdapter.this);
         mediationBannerListener.onAdOpened(FyberMediationAdapter.this);
@@ -484,6 +501,8 @@ public class FyberMediationAdapter extends RtbAdapter
         mediationBannerListener.onAdLeftApplication(FyberMediationAdapter.this);
       }
     };
+
+	return new CustomInneractiveAdViewEventsListenerAdapter();
   }
 
   /** {@link MediationInterstitialAdapter} implementation. */
@@ -650,14 +669,23 @@ public class FyberMediationAdapter extends RtbAdapter
    * @return the created event listener.
    */
   @NonNull
-  private InneractiveFullscreenAdEventsListener createFyberInterstitialListener() {
-    return new InneractiveFullscreenAdEventsListenerAdapter() {
+  private InneractiveFullscreenAdEventsListenerWithImpressionData createFyberInterstitialListener() {
+	  class CustomInneractiveFullscreenAdEventsListenerAdapter extends InneractiveFullscreenAdEventsListenerAdapter implements InneractiveFullscreenAdEventsListenerWithImpressionData {
       @Override
       public void onAdImpression(InneractiveAdSpot adSpot) {
-        mediationInterstitialListener.onAdOpened(FyberMediationAdapter.this);
       }
 
-      @Override
+		  @Override
+		  public void onAdImpression(InneractiveAdSpot inneractiveAdSpot, ImpressionData impressionData) {
+			  mediationInterstitialListener.onAdOpened(FyberMediationAdapter.this);
+
+			  // astar
+			  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+			  Map<String,Object> networkInfo = AstarUtils.getNetworkInfoFromImpressionData(impressionData);
+			  adTracker.adDidLoadForNetwork("digital_turbine", "admob", "interstitial", networkInfo);
+		  }
+
+		  @Override
       public void onAdClicked(InneractiveAdSpot adSpot) {
         mediationInterstitialListener.onAdClicked(FyberMediationAdapter.this);
       }
@@ -672,6 +700,8 @@ public class FyberMediationAdapter extends RtbAdapter
         mediationInterstitialListener.onAdLeftApplication(FyberMediationAdapter.this);
       }
     };
+
+	  return new CustomInneractiveFullscreenAdEventsListenerAdapter();
   }
 
   @Override
