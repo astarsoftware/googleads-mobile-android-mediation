@@ -15,20 +15,11 @@ public class AstarAppLovinUtils {
 			networkInfo.put("ad_domain", adBase.getAdDomain());
 		}
 		networkInfo.put("ad_id_number", adBase.getAdIdNumber());
-		if(adBase.getClCode() != null) {
-			networkInfo.put("cl_code", adBase.getClCode());
-		}
 		if(adBase.getDspId() != null) {
 			networkInfo.put("dsp_id", adBase.getDspId());
 		}
 		if(adBase.getDspName() != null) {
 			networkInfo.put("dsp_name", adBase.getDspName());
-		}
-		if(adBase.getDirectDownloadToken() != null) {
-			networkInfo.put("direct_download_token", adBase.getDirectDownloadToken());
-		}
-		if(adBase.getDirectDownloadParameters() != null) {
-			networkInfo.put("direct_download_params", bundleToSerializableMap(adBase.getDirectDownloadParameters()));
 		}
 		return networkInfo;
 	}
