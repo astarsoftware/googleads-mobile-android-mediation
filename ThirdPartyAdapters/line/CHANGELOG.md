@@ -1,5 +1,50 @@
 ## LINE Android Mediation Adapter Changelog
 
+#### Version 3.0.1.1 (In progress)
+- Native ad impressions are now overwritten by FiveAd SDK when using Google
+Mobile Ads SDK v24.4.0 or above.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- FiveAd SDK version 3.0.1.0.
+
+#### Version 3.0.1.0
+- Added support for forwarding the tagForUnderAgeOfConsent Google Mobile Ads SDK
+parameter to the FiveAd SDK.
+- Verified compatibility with FiveAd SDK version 3.0.1.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- FiveAd SDK version 3.0.1.0.
+
+#### Version 3.0.0.0
+- Verified compatibility with FiveAd SDK version 3.0.0.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- FiveAd SDK version 3.0.0.0.
+
+#### Version 2.9.20251028.0
+- Verified compatibility with FiveAd SDK version 2.9.20251028.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- FiveAd SDK version 2.9.20251028.0
+
+#### Version 2.9.20250924.1
+- Removed class-level references to Context. Can help reduce memory leak issues.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- FiveAd SDK version 2.9.20250924.1.
+
+#### Version 2.9.20250924.0
+- Verified compatibility with FiveAd SDK version 2.9.20250924.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.6.0.
+- FiveAd SDK version 2.9.20250924.0
+
 #### Version 2.9.20250718.0
 - Verified compatibility with FiveAd SDK version 2.9.20250718.
 

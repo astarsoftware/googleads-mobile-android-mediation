@@ -14,6 +14,9 @@
 
 package com.google.ads.mediation.fyber;
 
+import static com.google.android.gms.ads.RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE;
+import static com.google.android.gms.ads.RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE;
+
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
@@ -50,6 +53,7 @@ import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.MediationUtils;
 import com.google.android.gms.ads.MobileAds;
+import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.VersionInfo;
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
@@ -65,9 +69,12 @@ import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback;
 import com.google.android.gms.ads.mediation.MediationInterstitialAdConfiguration;
 import com.google.android.gms.ads.mediation.MediationInterstitialAdapter;
 import com.google.android.gms.ads.mediation.MediationInterstitialListener;
+import com.google.android.gms.ads.mediation.MediationNativeAdCallback;
+import com.google.android.gms.ads.mediation.MediationNativeAdConfiguration;
 import com.google.android.gms.ads.mediation.MediationRewardedAd;
 import com.google.android.gms.ads.mediation.MediationRewardedAdCallback;
 import com.google.android.gms.ads.mediation.MediationRewardedAdConfiguration;
+import com.google.android.gms.ads.mediation.NativeAdMapper;
 import com.google.android.gms.ads.mediation.rtb.RtbAdapter;
 import com.google.android.gms.ads.mediation.rtb.RtbSignalData;
 import com.google.android.gms.ads.mediation.rtb.SignalCallbacks;
@@ -133,6 +140,8 @@ public class FyberMediationAdapter extends RtbAdapter
   /** DT Exchange rewarded ad video renderer. */
   private FyberRewardedVideoRenderer rewardedRenderer;
 
+  private DTExchangeNativeAdMapper nativeAdMapper;
+
   /** Default Constructor. */
   public FyberMediationAdapter() {}
 
@@ -169,8 +178,8 @@ public class FyberMediationAdapter extends RtbAdapter
               callback.onFailure(error);
               return;
             }
-            rewardedRenderer = new FyberRewardedVideoRenderer(configuration, callback);
-            rewardedRenderer.loadWaterfallAd();
+            rewardedRenderer = new FyberRewardedVideoRenderer(callback);
+            rewardedRenderer.loadWaterfallAd(configuration);
           }
         });
   }
@@ -215,6 +224,8 @@ public class FyberMediationAdapter extends RtbAdapter
               KEY_APP_ID, configuredAppIds, appIdForInitialization);
       Log.w(TAG, logMessage);
     }
+
+    configureDTExchangePrivacy();
 
     InneractiveAdManager.initialize(
         context,
@@ -375,6 +386,11 @@ public class FyberMediationAdapter extends RtbAdapter
     if (interstitialActivityRef != null) {
       interstitialActivityRef.clear();
       interstitialActivityRef = null;
+    }
+
+    if (nativeAdMapper != null) {
+      nativeAdMapper.destroy();
+      nativeAdMapper = null;
     }
   }
 
@@ -708,8 +724,8 @@ public class FyberMediationAdapter extends RtbAdapter
   public void loadRtbBannerAd(
       @NonNull MediationBannerAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback) {
-    bannerRtbAd = new DTExchangeBannerAd(adConfiguration, callback);
-    bannerRtbAd.loadAd();
+    bannerRtbAd = new DTExchangeBannerAd(callback);
+    bannerRtbAd.loadAd(adConfiguration);
   }
 
   @Override
@@ -718,17 +734,41 @@ public class FyberMediationAdapter extends RtbAdapter
       @NonNull
           MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
               callback) {
-    interstitialRtbAd = new DTExchangeInterstitialAd(adConfiguration, callback);
-    interstitialRtbAd.loadAd();
+    interstitialRtbAd = new DTExchangeInterstitialAd(callback);
+    interstitialRtbAd.loadAd(adConfiguration);
   }
 
   @Override
   public void loadRtbRewardedAd(
       @NonNull MediationRewardedAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback> callback) {
-    rewardedRenderer = new FyberRewardedVideoRenderer(adConfiguration, callback);
+    rewardedRenderer = new FyberRewardedVideoRenderer(callback);
     InneractiveAdManager.setMediationName(MEDIATOR_NAME);
     InneractiveAdManager.setMediationVersion(MobileAds.getVersion().toString());
-    rewardedRenderer.loadRtbAd();
+    rewardedRenderer.loadRtbAd(adConfiguration);
+  }
+
+  @Override
+  public void loadRtbNativeAdMapper(
+      @NonNull MediationNativeAdConfiguration adConfiguration,
+      @NonNull MediationAdLoadCallback<NativeAdMapper, MediationNativeAdCallback> callback) {
+    if (nativeAdMapper != null) {
+      nativeAdMapper.destroy();
+      nativeAdMapper = null;
+    }
+    nativeAdMapper = new DTExchangeNativeAdMapper(callback);
+    nativeAdMapper.loadAd(adConfiguration);
+  }
+
+  private void configureDTExchangePrivacy() {
+    RequestConfiguration requestConfiguration = MobileAds.getRequestConfiguration();
+    boolean isChildUser =
+        (requestConfiguration.getTagForChildDirectedTreatment()
+                == TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE)
+            || requestConfiguration.getTagForUnderAgeOfConsent()
+                == TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE;
+    if (isChildUser) {
+      InneractiveAdManager.currentAudienceAppliesToCoppa();
+    }
   }
 }

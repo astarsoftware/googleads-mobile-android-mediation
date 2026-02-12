@@ -26,12 +26,16 @@ import com.facebook.ads.BidderTokenProvider;
 import com.google.ads.mediation.facebook.rtb.FacebookRtbBannerAd;
 import com.google.ads.mediation.facebook.rtb.FacebookRtbInterstitialAd;
 import com.google.ads.mediation.facebook.rtb.FacebookRtbNativeAd;
+import com.google.ads.mediation.facebook.rtb.MetaRtbAppOpenAd;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.RequestConfiguration;
 import com.google.android.gms.ads.VersionInfo;
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback;
 import com.google.android.gms.ads.mediation.MediationAdConfiguration;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
+import com.google.android.gms.ads.mediation.MediationAppOpenAd;
+import com.google.android.gms.ads.mediation.MediationAppOpenAdCallback;
+import com.google.android.gms.ads.mediation.MediationAppOpenAdConfiguration;
 import com.google.android.gms.ads.mediation.MediationBannerAd;
 import com.google.android.gms.ads.mediation.MediationBannerAdCallback;
 import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration;
@@ -221,12 +225,6 @@ public class FacebookMediationAdapter extends RtbAdapter {
       }
     }
 
-    if (placements.isEmpty()) {
-      initializationCompleteCallback.onInitializationFailed(
-          "Initialization failed. No placement IDs found.");
-      return;
-    }
-
     FacebookInitializer.getInstance().initialize(context, placements,
         new FacebookInitializer.Listener() {
           @Override
@@ -248,20 +246,27 @@ public class FacebookMediationAdapter extends RtbAdapter {
   }
 
   @Override
+  public void loadRtbAppOpenAd(
+      @NonNull MediationAppOpenAdConfiguration adConfiguration,
+      @NonNull MediationAdLoadCallback<MediationAppOpenAd, MediationAppOpenAdCallback> callback) {
+    MetaRtbAppOpenAd rtbAppOpenAd = new MetaRtbAppOpenAd(callback, metaFactory);
+    rtbAppOpenAd.loadAd(adConfiguration);
+  }
+
+  @Override
   public void loadRtbBannerAd(@NonNull MediationBannerAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
           mediationAdLoadCallback) {
-    banner = new FacebookRtbBannerAd(adConfiguration, mediationAdLoadCallback, metaFactory);
-    banner.render();
+    banner = new FacebookRtbBannerAd(mediationAdLoadCallback, metaFactory);
+    banner.render(adConfiguration);
   }
 
   @Override
   public void loadRtbInterstitialAd(@NonNull MediationInterstitialAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
           mediationAdLoadCallback) {
-    interstitial =
-        new FacebookRtbInterstitialAd(adConfiguration, mediationAdLoadCallback, metaFactory);
-    interstitial.render();
+    interstitial = new FacebookRtbInterstitialAd(mediationAdLoadCallback, metaFactory);
+    interstitial.render(adConfiguration);
   }
 
   @Override
@@ -269,28 +274,27 @@ public class FacebookMediationAdapter extends RtbAdapter {
       @NonNull MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
       @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
           mediationAdLoadCallback) {
-    rewardedAd = new FacebookRewardedAd(mediationRewardedAdConfiguration, mediationAdLoadCallback, metaFactory);
-    rewardedAd.render();
+    rewardedAd = new FacebookRewardedAd(mediationAdLoadCallback, metaFactory);
+    rewardedAd.render(mediationRewardedAdConfiguration);
   }
 
   @Override
   public void loadRtbNativeAd(@NonNull MediationNativeAdConfiguration mediationNativeAdConfiguration,
       @NonNull MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback>
           mediationAdLoadCallback) {
-    nativeAd =
-        new FacebookRtbNativeAd(
-            mediationNativeAdConfiguration, mediationAdLoadCallback, metaFactory);
-    nativeAd.render();
+    nativeAd = new FacebookRtbNativeAd(mediationAdLoadCallback, metaFactory);
+    nativeAd.render(mediationNativeAdConfiguration);
   }
 
   @Override
   public void loadRtbRewardedInterstitialAd(
-      @NonNull MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
-      @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
-          mediationAdLoadCallback) {
-    rewardedInterstitialAd = new FacebookRewardedInterstitialAd(mediationRewardedAdConfiguration,
-        mediationAdLoadCallback, metaFactory);
-    rewardedInterstitialAd.render();
+      @NonNull MediationRewardedAdConfiguration mediationAdConfiguration,
+      @NonNull
+          MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
+              mediationAdLoadCallback) {
+    rewardedInterstitialAd =
+        new FacebookRewardedInterstitialAd(mediationAdLoadCallback, metaFactory);
+    rewardedInterstitialAd.render(mediationAdConfiguration);
   }
 
   /**
@@ -309,14 +313,19 @@ public class FacebookMediationAdapter extends RtbAdapter {
   }
 
   /**
-   * Sets the Meta Audience Network mixed audience settings.
+   * Sets the Meta Audience Network mixed audience settings mapped to GMA's tagged for child
+   * directed treatment and tagged for under age of consent treatment.
    */
   public static void setMixedAudience(@NonNull MediationAdConfiguration mediationAdConfiguration) {
     if (mediationAdConfiguration.taggedForChildDirectedTreatment()
-        == RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE) {
+            == RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
+        || mediationAdConfiguration.taggedForUnderAgeTreatment()
+            == RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE) {
       AdSettings.setMixedAudience(true);
     } else if (mediationAdConfiguration.taggedForChildDirectedTreatment()
-        == RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE) {
+            == RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE
+        || mediationAdConfiguration.taggedForUnderAgeTreatment()
+            == RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_FALSE) {
       AdSettings.setMixedAudience(false);
     }
   }

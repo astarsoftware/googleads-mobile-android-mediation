@@ -40,9 +40,13 @@ import com.google.android.gms.ads.mediation.rtb.RtbSignalData
 import com.google.android.gms.ads.mediation.rtb.SignalCallbacks
 import com.google.common.truth.Truth.assertThat
 import com.unity3d.ads.IUnityAdsInitializationListener
+import com.unity3d.ads.IUnityAdsTokenListener
+import com.unity3d.ads.TokenConfiguration
 import com.unity3d.ads.UnityAds.UnityAdsInitializationError
 import com.unity3d.ads.UnityAdsLoadOptions
 import com.unity3d.ads.metadata.MediationMetaData
+import com.unity3d.services.banners.UnityBannerSize
+import org.junit.Assert.assertEquals
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -98,7 +102,12 @@ class UnityMediationAdapterTest {
   @Before
   fun setUp() {
     unityMediationAdapter =
-      UnityMediationAdapter(unityInitializer, unityBannerViewFactory, unityAdsLoader)
+      UnityMediationAdapter(
+        unityInitializer,
+        unityAdsWrapper,
+        unityBannerViewFactory,
+        unityAdsLoader,
+      )
     mediationConfigurations = emptyList()
 
     adSize = AdSize.BANNER
@@ -223,6 +232,131 @@ class UnityMediationAdapterTest {
     val adError = adErrorCaptor.firstValue
     assertThat(adError.code).isEqualTo(ERROR_CONTEXT_NOT_ACTIVITY)
     assertThat(adError.domain).isEqualTo(ADAPTER_ERROR_DOMAIN)
+    verifyNoMoreInteractions(signalCallbacks)
+  }
+
+  @Test
+  fun collectSignals_forBannerFormatAndActivityContext_invokesSignalCallbacks() {
+    whenever(unityAdsWrapper.getToken(any(), any())) doAnswer
+      { invocation ->
+        val callback = invocation.arguments[1] as IUnityAdsTokenListener
+        callback.onUnityAdsTokenReady(TEST_TOKEN)
+      }
+
+    val rtbSignalData =
+      RtbSignalData(
+        activity,
+        listOf(MediationConfiguration(AdFormat.BANNER, /* serverParameters= */ bundleOf())),
+        /* networkExtras= */ bundleOf(),
+        AdSize.BANNER,
+      )
+
+    unityMediationAdapter.collectSignals(rtbSignalData, signalCallbacks)
+
+    verify(signalCallbacks).onSuccess(any())
+    val tokenConfigCaptor = argumentCaptor<TokenConfiguration>()
+    verify(unityAdsWrapper).getToken(tokenConfigCaptor.capture(), any())
+    assertEquals(com.unity3d.ads.AdFormat.BANNER, tokenConfigCaptor.firstValue.adFormat)
+    verifyNoMoreInteractions(signalCallbacks)
+  }
+
+  @Test
+  fun collectSignals_forInterstitialFormat_invokesSignalCallbacks() {
+    whenever(unityAdsWrapper.getToken(any(), any())) doAnswer
+      { invocation ->
+        val callback = invocation.arguments[1] as IUnityAdsTokenListener
+        callback.onUnityAdsTokenReady(TEST_TOKEN)
+      }
+
+    val rtbSignalData =
+      RtbSignalData(
+        activity,
+        listOf(MediationConfiguration(AdFormat.INTERSTITIAL, /* serverParameters= */ bundleOf())),
+        /* networkExtras= */ bundleOf(),
+        null,
+      )
+
+    unityMediationAdapter.collectSignals(rtbSignalData, signalCallbacks)
+
+    verify(signalCallbacks).onSuccess(any())
+    val tokenConfigCaptor = argumentCaptor<TokenConfiguration>()
+    verify(unityAdsWrapper).getToken(tokenConfigCaptor.capture(), any())
+    assertEquals(com.unity3d.ads.AdFormat.INTERSTITIAL, tokenConfigCaptor.firstValue.adFormat)
+    verifyNoMoreInteractions(signalCallbacks)
+  }
+
+  @Test
+  fun collectSignals_forRewardedFormat_invokesSignalCallbacks() {
+    whenever(unityAdsWrapper.getToken(any(), any())) doAnswer
+      { invocation ->
+        val callback = invocation.arguments[1] as IUnityAdsTokenListener
+        callback.onUnityAdsTokenReady(TEST_TOKEN)
+      }
+
+    val rtbSignalData =
+      RtbSignalData(
+        activity,
+        listOf(MediationConfiguration(AdFormat.REWARDED, /* serverParameters= */ bundleOf())),
+        /* networkExtras= */ bundleOf(),
+        null,
+      )
+
+    unityMediationAdapter.collectSignals(rtbSignalData, signalCallbacks)
+
+    verify(signalCallbacks).onSuccess(any())
+    val tokenConfigCaptor = argumentCaptor<TokenConfiguration>()
+    verify(unityAdsWrapper).getToken(tokenConfigCaptor.capture(), any())
+    assertEquals(com.unity3d.ads.AdFormat.REWARDED, tokenConfigCaptor.firstValue.adFormat)
+    verifyNoMoreInteractions(signalCallbacks)
+  }
+
+  @Test
+  fun collectSignals_forRewardedInterstitialFormat_invokesSignalCallbacks() {
+    whenever(unityAdsWrapper.getToken(any(), any())) doAnswer
+      { invocation ->
+        val callback = invocation.arguments[1] as IUnityAdsTokenListener
+        callback.onUnityAdsTokenReady(TEST_TOKEN)
+      }
+
+    val rtbSignalData =
+      RtbSignalData(
+        activity,
+        listOf(
+          MediationConfiguration(AdFormat.REWARDED_INTERSTITIAL, /* serverParameters= */ bundleOf())
+        ),
+        /* networkExtras= */ bundleOf(),
+        null,
+      )
+
+    unityMediationAdapter.collectSignals(rtbSignalData, signalCallbacks)
+
+    verify(signalCallbacks).onSuccess(any())
+    val tokenConfigCaptor = argumentCaptor<TokenConfiguration>()
+    verify(unityAdsWrapper).getToken(tokenConfigCaptor.capture(), any())
+    // GMA's rewarded interstitial format is mapped to Unity Ads's rewarded format.
+    assertEquals(com.unity3d.ads.AdFormat.REWARDED, tokenConfigCaptor.firstValue.adFormat)
+    verifyNoMoreInteractions(signalCallbacks)
+  }
+
+  @Test
+  fun collectSignals_forUnsupportedFormat_invokesSignalCallbacks() {
+    whenever(unityAdsWrapper.getToken(any())) doAnswer
+      { invocation ->
+        val callback = invocation.arguments[0] as IUnityAdsTokenListener
+        callback.onUnityAdsTokenReady(TEST_TOKEN)
+      }
+
+    val rtbSignalData =
+      RtbSignalData(
+        activity,
+        listOf(MediationConfiguration(AdFormat.NATIVE, /* serverParameters= */ bundleOf())),
+        /* networkExtras= */ bundleOf(),
+        null,
+      )
+
+    unityMediationAdapter.collectSignals(rtbSignalData, signalCallbacks)
+    verify(unityAdsWrapper).getToken(any())
+    verify(signalCallbacks).onSuccess(any())
     verifyNoMoreInteractions(signalCallbacks)
   }
 
@@ -421,6 +555,33 @@ class UnityMediationAdapterTest {
       verify(unityBannerViewWrapper).setListener(any())
       verify(unityBannerViewWrapper).load(any())
     }
+  }
+
+  @Test
+  fun loadRtbBannerAd_evenForNonStandardUnityBannerSize_loads() {
+    // Medium rectangle is a "non-standard" size for Unity Ads SDK.
+    adSize = AdSize.MEDIUM_RECTANGLE
+    doAnswer { invocation ->
+        val args = invocation.arguments
+        (args[2] as IUnityAdsInitializationListener).onInitializationComplete()
+      }
+      .whenever(unityInitializer)
+      .initializeUnityAds(any(), any(), any())
+    mediationBannerAdConfiguration = initializeBannerAd(activity, "testBidResponse")
+    whenever(unityAdsLoader.createUnityAdsLoadOptionsWithId(any())) doReturn mock()
+
+    unityMediationAdapter.loadRtbBannerAd(
+      mediationBannerAdConfiguration,
+      mediationBannerAdLoadCallback,
+    )
+
+    val unityBannerSizeCaptor = argumentCaptor<UnityBannerSize>()
+    verify(unityBannerViewFactory)
+      .createBannerView(eq(activity), eq(TEST_PLACEMENT_ID), unityBannerSizeCaptor.capture())
+    val unityBannerSize = unityBannerSizeCaptor.firstValue
+    assertThat(unityBannerSize.width).isEqualTo(AdSize.MEDIUM_RECTANGLE.width)
+    assertThat(unityBannerSize.height).isEqualTo(AdSize.MEDIUM_RECTANGLE.height)
+    verify(unityBannerViewWrapper).load(any())
   }
 
   private fun initializeBannerAd(context: Context, bidResponse: String) =
@@ -801,5 +962,6 @@ class UnityMediationAdapterTest {
     const val TEST_VERSION_NUMBER = "100"
     const val TEST_GAME_ID = "gameId"
     const val TEST_PLACEMENT_ID = "placementId"
+    const val TEST_TOKEN = "test_token"
   }
 }

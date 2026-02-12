@@ -25,12 +25,16 @@ import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.ERROR_CODE_EMPTY_NATIVE_AD_DATA
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.ERROR_MSG_AD_REQUEST_EXPIRED
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.ERROR_MSG_EMPTY_NATIVE_AD_DATA
+import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.PLACEMENT_ID_KEY
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.SDK_ERROR_DOMAIN
+import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.WATERMARK_KEY
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback
 import com.google.android.gms.ads.mediation.MediationNativeAdCallback
 import com.google.android.gms.ads.mediation.MediationNativeAdConfiguration
 import com.google.android.gms.ads.mediation.NativeAdMapper
+import io.bidmachine.AdPlacementConfig
+import io.bidmachine.RendererConfiguration
 import io.bidmachine.models.AuctionResult
 import io.bidmachine.nativead.NativeAd
 import io.bidmachine.nativead.NativeListener
@@ -49,16 +53,27 @@ private constructor(
   private val mediationNativeAdLoadCallback:
     MediationAdLoadCallback<NativeAdMapper, MediationNativeAdCallback>,
   private val bidResponse: String,
+  private val watermark: String,
+  @get:VisibleForTesting internal val adPlacementConfig: AdPlacementConfig,
 ) : NativeAdMapper(), NativeRequest.AdRequestListener, NativeListener {
   private var nativeAdCallback: MediationNativeAdCallback? = null
-  @VisibleForTesting internal var nativeRequestBuilder = NativeRequest.Builder()
+  @VisibleForTesting internal var nativeRequestBuilder = NativeRequest.Builder(adPlacementConfig)
   private lateinit var bidMachineNativeAd: NativeAd
   private var bidMachineMediaView: NativeMediaView? = null
 
-  fun loadAd(nativeAd: NativeAd) {
+  fun loadWaterfallAd(nativeAd: NativeAd) {
+    val nativeRequest = nativeRequestBuilder.setListener(this).build()
+    loadAd(nativeAd, nativeRequest)
+  }
+
+  fun loadRtbAd(nativeAd: NativeAd) {
+    val nativeRequest = nativeRequestBuilder.setBidPayload(bidResponse).setListener(this).build()
+    loadAd(nativeAd, nativeRequest)
+  }
+
+  private fun loadAd(nativeAd: NativeAd, nativeRequest: NativeRequest) {
     bidMachineNativeAd = nativeAd
     bidMachineNativeAd.setListener(this)
-    val nativeRequest = nativeRequestBuilder.setBidPayload(bidResponse).setListener(this).build()
     nativeRequest.request(context)
   }
 
@@ -70,6 +85,9 @@ private constructor(
       nativeRequest.destroy()
       return
     }
+    bidMachineNativeAd.setRendererConfiguration(
+      RendererConfiguration(mapOf(WATERMARK_KEY to watermark))
+    )
     bidMachineNativeAd.load(nativeRequest)
   }
 
@@ -169,8 +187,19 @@ private constructor(
     ): Result<BidMachineNativeAd> {
       val context = mediationNativeAdConfiguration.context
       val bidResponse = mediationNativeAdConfiguration.bidResponse
+      val watermark = mediationNativeAdConfiguration.watermark
+      val placementId = mediationNativeAdConfiguration.serverParameters.getString(PLACEMENT_ID_KEY)
+      val adPlacementConfig = AdPlacementConfig.nativeBuilder().withPlacementId(placementId).build()
 
-      return Result.success(BidMachineNativeAd(context, mediationNativeAdLoadCallback, bidResponse))
+      return Result.success(
+        BidMachineNativeAd(
+          context,
+          mediationNativeAdLoadCallback,
+          bidResponse,
+          watermark,
+          adPlacementConfig,
+        )
+      )
     }
   }
 }

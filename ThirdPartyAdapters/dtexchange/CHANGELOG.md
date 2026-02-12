@@ -1,5 +1,52 @@
 ## DT Exchange Android Mediation Adapter Changelog
 
+#### Version 8.4.2.2 (In progress)
+
+- Updated to display banner ad within a wrapper view whose bounds are the
+publisher-requested width and height. This will prevent banner ads from
+unexpectedly covering app's content.
+
+#### Version 8.4.2.1
+- Added support for forwarding the `tagForChildDirectedTreatment` and
+`tagForUnderAgeOfConsent` Google Mobile Ads SDK parameters to the DT Exchange
+SDK.
+- Verified compatibility with DT Exchange SDK 8.4.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- DT Exchange SDK version 8.4.2.
+
+#### Version 8.4.2.0
+- Added null protection to Native Ad's fields
+- Verified compatibility with DT Exchange SDK 8.4.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- DT Exchange SDK version 8.4.2.
+
+#### Version 8.4.1.0
+- Verified compatibility with DT Exchange SDK 8.4.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.8.0.
+- DT Exchange SDK version 8.4.1.
+
+#### Version 8.4.0.1
+- Added support for Native Ads
+- Verified compatibility with DT Exchange SDK 8.4.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- DT Exchange SDK version 8.4.0.
+
+#### Version 8.4.0.0
+- Removed class-level references to Context. Can help reduce memory leak issues.
+- Verified compatibility with DT Exchange SDK 8.4.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.6.0.
+- DT Exchange SDK version 8.4.0.
+
 #### Version 8.3.8.0
 - Refactored the error codes into a new DTExchangeErrorCodes.kt file.
 - Verified compatibility with DT Exchange SDK 8.3.8.
@@ -9,7 +56,7 @@ Built and tested with:
 - DT Exchange SDK version 8.3.8.
 
 #### Version 8.3.7.0
-- Updated adapter to support bidding for banner and interstitial ad formats.
+- Updated adapter to support bidding for banner, interstitial and rewarded ad formats.
 - Verified compatibility with DT Exchange SDK 8.3.7.
 
 Built and tested with:

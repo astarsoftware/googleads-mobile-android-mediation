@@ -15,14 +15,18 @@
 package com.google.ads.mediation.bidmachine
 
 import android.content.Context
+import androidx.core.os.bundleOf
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.ads.mediation.adaptertestkit.AdErrorMatcher
 import com.google.ads.mediation.adaptertestkit.AdapterTestKitConstants.TEST_BID_RESPONSE
+import com.google.ads.mediation.adaptertestkit.AdapterTestKitConstants.TEST_PLACEMENT_ID
+import com.google.ads.mediation.adaptertestkit.AdapterTestKitConstants.TEST_WATERMARK
 import com.google.ads.mediation.adaptertestkit.createMediationBannerAdConfiguration
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.ADAPTER_ERROR_DOMAIN
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.ERROR_CODE_AD_REQUEST_EXPIRED
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.ERROR_MSG_AD_REQUEST_EXPIRED
+import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.PLACEMENT_ID_KEY
 import com.google.ads.mediation.bidmachine.BidMachineMediationAdapter.Companion.SDK_ERROR_DOMAIN
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdSize
@@ -30,8 +34,9 @@ import com.google.android.gms.ads.mediation.MediationAdLoadCallback
 import com.google.android.gms.ads.mediation.MediationBannerAd
 import com.google.android.gms.ads.mediation.MediationBannerAdCallback
 import com.google.common.truth.Truth.assertThat
+import io.bidmachine.BannerAdSize
+import io.bidmachine.RendererConfiguration
 import io.bidmachine.banner.BannerRequest
-import io.bidmachine.banner.BannerSize
 import io.bidmachine.banner.BannerView
 import io.bidmachine.utils.BMError
 import org.junit.Before
@@ -39,6 +44,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import org.mockito.kotlin.any
 import org.mockito.kotlin.argThat
+import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
@@ -63,32 +69,60 @@ class BidMachineBannerAdTest {
 
   @Before
   fun setUp() {
+    val serverParams = bundleOf(PLACEMENT_ID_KEY to TEST_PLACEMENT_ID)
     val adConfiguration =
       createMediationBannerAdConfiguration(
         context = context,
         bidResponse = TEST_BID_RESPONSE,
         adSize = AdSize.BANNER,
+        serverParameters = serverParams,
+        watermark = TEST_WATERMARK,
       )
-    BidMachineBannerAd.newInstance(adConfiguration, mockAdLoadCallback).onSuccess {
+    BidMachineBannerAd.newInstance(adConfiguration, mockAdLoadCallback, isRtb = false).onSuccess {
       bidMachineBannerAd = it
     }
   }
 
   @Test
-  fun loadAd_OnBannerView_invokesBidMachineRequest() {
+  fun newInstance_correctlyCreatesAdPlacementConfig() {
+    assertThat(
+        (bidMachineBannerAd.adPlacementConfig.adFormat as io.bidmachine.AdFormat.Banner)
+          .bannerAdSize
+      )
+      .isEqualTo(BannerAdSize.Banner)
+    assertThat(bidMachineBannerAd.adPlacementConfig.placementId).isEqualTo(TEST_PLACEMENT_ID)
+  }
+
+  @Test
+  fun loadWaterfallAd_OnBannerView_invokesBidMachineRequest() {
     val mockBannerRequestBuilder =
       mock<BannerRequest.Builder> {
-        on { setSize(eq(BannerSize.Size_320x50)) } doReturn it
+        on { setListener(any()) } doReturn it
+        on { build() } doReturn mockBannerRequest
+      }
+    bidMachineBannerAd.bannerRequestBuilder = mockBannerRequestBuilder
+
+    bidMachineBannerAd.loadWaterfallAd(mockBannerView, context)
+
+    verify(mockBannerView).setListener(eq(bidMachineBannerAd))
+    verify(mockBannerRequestBuilder, never()).setBidPayload(any())
+    verify(mockBannerRequestBuilder).setListener(eq(bidMachineBannerAd))
+    verify(mockBannerRequest).request(eq(context))
+  }
+
+  @Test
+  fun loadRtbAd_OnBannerView_invokesBidMachineRequest() {
+    val mockBannerRequestBuilder =
+      mock<BannerRequest.Builder> {
         on { setBidPayload(eq(TEST_BID_RESPONSE)) } doReturn it
         on { setListener(any()) } doReturn it
         on { build() } doReturn mockBannerRequest
       }
     bidMachineBannerAd.bannerRequestBuilder = mockBannerRequestBuilder
 
-    bidMachineBannerAd.loadAdOnBannerView(mockBannerView)
+    bidMachineBannerAd.loadRtbAd(mockBannerView, context)
 
     verify(mockBannerView).setListener(eq(bidMachineBannerAd))
-    verify(mockBannerRequestBuilder).setSize(eq(BannerSize.Size_320x50))
     verify(mockBannerRequestBuilder).setBidPayload(eq(TEST_BID_RESPONSE))
     verify(mockBannerRequestBuilder).setListener(eq(bidMachineBannerAd))
     verify(mockBannerRequest).request(eq(context))
@@ -96,7 +130,7 @@ class BidMachineBannerAdTest {
 
   @Test
   fun getView_returnsBannerView() {
-    bidMachineBannerAd.loadAdOnBannerView(mockBannerView)
+    bidMachineBannerAd.loadRtbAd(mockBannerView, context)
 
     val adView = bidMachineBannerAd.view
 
@@ -105,10 +139,13 @@ class BidMachineBannerAdTest {
 
   @Test
   fun onRequestSuccess_invokesBannerViewLoad() {
-    bidMachineBannerAd.loadAdOnBannerView(mockBannerView)
+    bidMachineBannerAd.loadRtbAd(mockBannerView, context)
+    val rendererConfigCaptor = argumentCaptor<RendererConfiguration>()
 
     bidMachineBannerAd.onRequestSuccess(mockBannerRequest, mock())
 
+    verify(mockBannerView).setRendererConfiguration(rendererConfigCaptor.capture())
+    assertThat(rendererConfigCaptor.firstValue.getWatermark()).isEqualTo(TEST_WATERMARK)
     verify(mockBannerView).load(mockBannerRequest)
   }
 
@@ -117,7 +154,7 @@ class BidMachineBannerAdTest {
     whenever(mockBannerRequest.isExpired) doReturn true
     val expectedAdError =
       AdError(ERROR_CODE_AD_REQUEST_EXPIRED, ERROR_MSG_AD_REQUEST_EXPIRED, ADAPTER_ERROR_DOMAIN)
-    bidMachineBannerAd.loadAdOnBannerView(mockBannerView)
+    bidMachineBannerAd.loadRtbAd(mockBannerView, context)
 
     bidMachineBannerAd.onRequestSuccess(mockBannerRequest, mock())
 
@@ -159,7 +196,7 @@ class BidMachineBannerAdTest {
   fun onAdLoadFailed_invokesOnFailure() {
     val bMError = BMError.AlreadyShown
     val expectedAdError = AdError(bMError.code, bMError.message, SDK_ERROR_DOMAIN)
-    bidMachineBannerAd.loadAdOnBannerView(mockBannerView)
+    bidMachineBannerAd.loadRtbAd(mockBannerView, context)
 
     bidMachineBannerAd.onAdLoadFailed(mockBannerView, bMError)
 

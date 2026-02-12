@@ -28,6 +28,7 @@ import com.unity3d.ads.UnityAds.UnityAdsLoadError;
 import com.unity3d.ads.UnityAds.UnityAdsShowError;
 import com.unity3d.ads.UnityAdsLoadOptions;
 import com.unity3d.ads.UnityAdsShowOptions;
+import com.unity3d.ads.metadata.MetaData;
 import java.util.UUID;
 
 /**
@@ -43,9 +44,6 @@ public class UnityInterstitialAd
   /** Object ID used to track loaded/shown ads. */
   private String objectId;
 
-  /** Confiuration object for Interstitial Ads */
-  private final MediationInterstitialAdConfiguration adConfiguration;
-
   /** Callback object for Interstitial Ad Load. */
   private final MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
       adLoadCallback;
@@ -60,6 +58,8 @@ public class UnityInterstitialAd
   /** Placement ID used to determine what type of ad to load. */
   private String placementId;
 
+  private final String watermark;
+
   public UnityInterstitialAd(
       @NonNull MediationInterstitialAdConfiguration adConfiguration,
       @NonNull
@@ -67,7 +67,7 @@ public class UnityInterstitialAd
               adLoadCallback,
       @NonNull UnityInitializer unityInitializer,
       @NonNull UnityAdsLoader unityAdsLoader) {
-    this.adConfiguration = adConfiguration;
+    watermark = adConfiguration.getWatermark();
     this.adLoadCallback = adLoadCallback;
     this.unityInitializer = unityInitializer;
     this.unityAdsLoader = unityAdsLoader;
@@ -149,7 +149,7 @@ public class UnityInterstitialAd
     }
   }
 
-  public void loadAd() {
+  public void loadAd(MediationInterstitialAdConfiguration adConfiguration) {
     Context context = adConfiguration.getContext();
     Bundle serverParameters = adConfiguration.getServerParameters();
 
@@ -177,9 +177,8 @@ public class UnityInterstitialAd
                         + "and can now load interstitial ad with placement ID: %s",
                     gameId, placementId);
             Log.d(UnityMediationAdapter.TAG, logMessage);
-            // TODO(b/280861464): Add setCoppa test when loading ad
-            UnityAdsAdapterUtils.setCoppa(
-                MobileAds.getRequestConfiguration().getTagForChildDirectedTreatment(), context);
+            UnityAdsAdapterUtils.setUnityAdsPrivacy(
+                MobileAds.getRequestConfiguration(), new MetaData(context));
 
             objectId = UUID.randomUUID().toString();
             UnityAdsLoadOptions unityAdsLoadOptions =
@@ -214,7 +213,7 @@ public class UnityInterstitialAd
 
     UnityAdsShowOptions unityAdsShowOptions =
         unityAdsLoader.createUnityAdsShowOptionsWithId(objectId);
-    unityAdsShowOptions.set(KEY_WATERMARK, adConfiguration.getWatermark());
+    unityAdsShowOptions.set(KEY_WATERMARK, watermark);
     // UnityAds can handle a null placement ID so show is always called here.
     // Note: Context here is the activity that the publisher passed to GMA SDK's show() method
     // (https://developers.google.com/admob/android/reference/com/google/android/gms/ads/appopen/AppOpenAd#show(android.app.Activity)).

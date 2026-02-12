@@ -26,9 +26,8 @@ import com.google.android.gms.ads.mediation.MediationInterstitialAdConfiguration
  * DTExchange SDK.
  */
 class DTExchangeInterstitialAd(
-  private val mediationInterstitialAdConfiguration: MediationInterstitialAdConfiguration,
   private val mediationAdLoadCallback:
-    MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>,
+    MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
 ) :
   MediationInterstitialAd,
   InneractiveAdSpot.RequestListener,
@@ -36,7 +35,7 @@ class DTExchangeInterstitialAd(
   private lateinit var adSpot: InneractiveAdSpot
   private var interstitialAdCallback: MediationInterstitialAdCallback? = null
 
-  fun loadAd() {
+  fun loadAd(mediationInterstitialAdConfiguration: MediationInterstitialAdConfiguration) {
     InneractiveAdManager.setMediationName(FyberMediationAdapter.MEDIATOR_NAME)
     InneractiveAdManager.setMediationVersion(MobileAds.getVersion().toString())
 

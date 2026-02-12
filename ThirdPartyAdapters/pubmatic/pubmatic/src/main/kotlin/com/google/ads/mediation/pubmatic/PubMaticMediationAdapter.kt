@@ -20,9 +20,12 @@ import androidx.annotation.VisibleForTesting
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdFormat
 import com.google.android.gms.ads.AdSize
+import com.google.android.gms.ads.MediationUtils
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE
 import com.google.android.gms.ads.RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
+import com.google.android.gms.ads.RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_FALSE
+import com.google.android.gms.ads.RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE
 import com.google.android.gms.ads.VersionInfo
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback
@@ -46,6 +49,7 @@ import com.pubmatic.sdk.common.OpenWrapSDK
 import com.pubmatic.sdk.common.OpenWrapSDKConfig
 import com.pubmatic.sdk.common.OpenWrapSDKInitializer
 import com.pubmatic.sdk.common.POBAdFormat
+import com.pubmatic.sdk.common.POBAdSize
 import com.pubmatic.sdk.common.POBError
 import com.pubmatic.sdk.openwrap.core.signal.POBBiddingHost
 import com.pubmatic.sdk.openwrap.core.signal.POBSignalConfig
@@ -111,9 +115,16 @@ class PubMaticMediationAdapter(
     // Set child-directed bit as part of initialization.
     val tagForChildDirectedTreatment =
       MobileAds.getRequestConfiguration().tagForChildDirectedTreatment
-    if (tagForChildDirectedTreatment == TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE) {
+    val tagForUnderAgeOfConsent = MobileAds.getRequestConfiguration().tagForUnderAgeOfConsent
+    if (
+      tagForChildDirectedTreatment == TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE ||
+        tagForUnderAgeOfConsent == TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE
+    ) {
       OpenWrapSDK.setCoppa(true)
-    } else if (tagForChildDirectedTreatment == TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE) {
+    } else if (
+      tagForChildDirectedTreatment == TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE ||
+        tagForUnderAgeOfConsent == TAG_FOR_UNDER_AGE_OF_CONSENT_FALSE
+    ) {
       OpenWrapSDK.setCoppa(false)
     }
 
@@ -176,11 +187,80 @@ class PubMaticMediationAdapter(
     )
   }
 
+  override fun loadBannerAd(
+    mediationBannerAdConfiguration: MediationBannerAdConfiguration,
+    callback: MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>,
+  ) {
+    PubMaticBannerAd.newInstance(
+        mediationBannerAdConfiguration,
+        callback,
+        pubMaticAdFactory,
+        isRTB = false,
+      )
+      .onSuccess {
+        bannerAd = it
+        bannerAd.loadAd()
+      }
+  }
+
+  override fun loadInterstitialAd(
+    mediationInterstitialAdConfiguration: MediationInterstitialAdConfiguration,
+    callback: MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>,
+  ) {
+    PubMaticInterstitialAd.newInstance(
+        mediationInterstitialAdConfiguration,
+        callback,
+        pubMaticAdFactory,
+        isRtb = false,
+      )
+      .onSuccess {
+        interstitialAd = it
+        interstitialAd.loadAd()
+      }
+  }
+
+  override fun loadRewardedAd(
+    mediationRewardedAdConfiguration: MediationRewardedAdConfiguration,
+    callback: MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>,
+  ) {
+    PubMaticRewardedAd.newInstance(
+        mediationRewardedAdConfiguration,
+        callback,
+        pubMaticAdFactory,
+        isRtb = false,
+      )
+      .onSuccess {
+        rewardedAd = it
+        rewardedAd.loadAd()
+      }
+  }
+
+  override fun loadNativeAdMapper(
+    mediationNativeAdConfiguration: MediationNativeAdConfiguration,
+    callback: MediationAdLoadCallback<NativeAdMapper, MediationNativeAdCallback>,
+  ) {
+    PubMaticNativeAd.newInstance(
+        mediationNativeAdConfiguration,
+        callback,
+        pubMaticAdFactory,
+        isRtb = false,
+      )
+      .onSuccess {
+        nativeAd = it
+        nativeAd.loadAd()
+      }
+  }
+
   override fun loadRtbBannerAd(
     mediationBannerAdConfiguration: MediationBannerAdConfiguration,
     callback: MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>,
   ) {
-    PubMaticBannerAd.newInstance(mediationBannerAdConfiguration, callback, pubMaticAdFactory)
+    PubMaticBannerAd.newInstance(
+        mediationBannerAdConfiguration,
+        callback,
+        pubMaticAdFactory,
+        isRTB = true,
+      )
       .onSuccess {
         bannerAd = it
         bannerAd.loadAd()
@@ -195,6 +275,7 @@ class PubMaticMediationAdapter(
         mediationInterstitialAdConfiguration,
         callback,
         pubMaticAdFactory,
+        isRtb = true,
       )
       .onSuccess {
         interstitialAd = it
@@ -206,7 +287,12 @@ class PubMaticMediationAdapter(
     mediationRewardedAdConfiguration: MediationRewardedAdConfiguration,
     callback: MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>,
   ) {
-    PubMaticRewardedAd.newInstance(mediationRewardedAdConfiguration, callback, pubMaticAdFactory)
+    PubMaticRewardedAd.newInstance(
+        mediationRewardedAdConfiguration,
+        callback,
+        pubMaticAdFactory,
+        isRtb = true,
+      )
       .onSuccess {
         rewardedAd = it
         rewardedAd.loadAd()
@@ -217,7 +303,12 @@ class PubMaticMediationAdapter(
     mediationNativeAdConfiguration: MediationNativeAdConfiguration,
     callback: MediationAdLoadCallback<NativeAdMapper, MediationNativeAdCallback>,
   ) {
-    PubMaticNativeAd.newInstance(mediationNativeAdConfiguration, callback, pubMaticAdFactory)
+    PubMaticNativeAd.newInstance(
+        mediationNativeAdConfiguration,
+        callback,
+        pubMaticAdFactory,
+        isRtb = true,
+      )
       .onSuccess {
         nativeAd = it
         nativeAd.loadAd()
@@ -232,12 +323,27 @@ class PubMaticMediationAdapter(
     const val SDK_ERROR_DOMAIN = "com.pubmatic.sdk"
     const val KEY_PUBLISHER_ID = "publisher_id"
     const val KEY_PROFILE_ID = "profile_id"
+    const val KEY_AD_UNIT = "ad_unit_id"
 
     const val ERROR_MISSING_PUBLISHER_ID = 101
+    const val ERROR_MISSING_PUBLISHER_ID_MSG = "Missing or empty Publisher Id"
 
     const val ERROR_INVALID_AD_FORMAT = 102
 
     const val ERROR_AD_NOT_READY = 103
+
+    const val ERROR_MISSING_OR_INVALID_PROFILE_ID = 104
+    const val ERROR_MISSING_OR_INVALID_PROFILE_ID_MSG = "Missing or invalid Profile Id"
+
+    const val ERROR_MISSING_AD_UNIT_ID = 105
+    const val ERROR_MISSING_AD_UNIT_ID_MSG = "Missing or empty Ad Unit Id"
+
+    const val ERROR_NULL_REWARDED_AD = 106
+    const val ERROR_NULL_REWARDED_AD_MSG = "Returned Rewarded ad is null"
+
+    const val ERROR_INVALID_BANNER_AD_SIZE = 107
+
+    const val ERROR_INVALID_BANNER_AD_SIZE_MSG = "Invalid banner ad size"
 
     /**
      * Gets the PubMatic publisher ID from ad unit mappings.
@@ -307,5 +413,25 @@ class PubMaticMediationAdapter(
         AdFormat.NATIVE -> POBAdFormat.NATIVE
         else -> null
       }
+
+    /**
+     * Maps Google banner ad size to a valid PubMatic banner size.
+     *
+     * Returns null if the banner size is not supported by PubMatic.
+     */
+    fun getPubMaticBannerAdSize(context: Context, adSize: AdSize): POBAdSize? {
+      val potentials = listOf(AdSize.BANNER, AdSize.MEDIUM_RECTANGLE)
+
+      val closestSize = MediationUtils.findClosestSize(context, adSize, potentials)
+      return when (closestSize) {
+        AdSize.BANNER -> POBAdSize.BANNER_SIZE_320x50
+        AdSize.MEDIUM_RECTANGLE -> POBAdSize.BANNER_SIZE_300x250
+        AdSize.FULL_BANNER -> POBAdSize.BANNER_SIZE_468x60
+        AdSize.LARGE_BANNER -> POBAdSize.BANNER_SIZE_320x100
+        AdSize.LEADERBOARD -> POBAdSize.BANNER_SIZE_728x90
+        AdSize.WIDE_SKYSCRAPER -> POBAdSize.BANNER_SIZE_120x600
+        else -> null
+      }
+    }
   }
 }

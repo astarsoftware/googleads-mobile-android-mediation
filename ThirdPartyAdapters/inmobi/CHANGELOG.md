@@ -1,5 +1,58 @@
 ## InMobi Android Mediation Adapter Changelog
 
+#### Version 11.1.1.0
+- Verified compatibility with InMobi Kotlin SDK version 11.1.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- InMobi Kotlin SDK version 11.1.1.
+
+#### Version 11.1.0.1
+- Added support for forwarding the `tagForUnderAgeOfConsent` Google Mobile Ads
+SDK parameter to the InMobi SDK.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- InMobi Kotlin SDK version 11.1.0.
+
+#### Version 11.1.0.0
+- Verified compatibility with InMobi Kotlin SDK version 11.1.0.
+- RewardedInterstitial support added.
+- Adapter does not modify InMobi isAgeRestricted if the publisher has not set the `tag_for_under_age_of_consent` flag.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- InMobi Kotlin SDK version 11.1.0.
+
+#### Version 10.8.8.1
+- Removed class-level references to `Context` objects to help with memory leak issues.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- InMobi Kotlin SDK version 10.8.8.
+
+#### Version 10.8.8.0
+- Verified compatibility with InMobi Kotlin SDK version 10.8.8.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- InMobi Kotlin SDK version 10.8.8.
+
+#### Version 10.8.7.1
+- Native Ads now call destroy() when untrackView is called.
+- Verified compatibility with InMobi Kotlin SDK version 10.8.7.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- InMobi Kotlin SDK version 10.8.7.
+
+#### Version 10.8.7.0
+- Verified compatibility with InMobi Kotlin SDK version 10.8.7.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- InMobi Kotlin SDK version 10.8.7.
+
 #### Version 10.8.3.1
 - Removed account ID and placement ID validation checks on bidding requests.
 - For banner bidding requests, removes a validation check that enforces the banner size to map to a standard InMobi ad size. If InMobi bidder bids on a non-standard size, the adapter now allows that request to render.

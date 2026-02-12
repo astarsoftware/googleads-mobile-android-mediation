@@ -21,6 +21,7 @@ import android.util.Log;
 import android.widget.FrameLayout;
 import androidx.annotation.NonNull;
 import com.google.ads.mediation.mintegral.MintegralConstants;
+import com.google.ads.mediation.mintegral.MintegralFactory;
 import com.google.ads.mediation.mintegral.MintegralUtils;
 import com.google.ads.mediation.mintegral.mediation.MintegralBannerAd;
 import com.google.android.gms.ads.AdError;
@@ -30,24 +31,22 @@ import com.google.android.gms.ads.mediation.MediationBannerAdCallback;
 import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration;
 import com.mbridge.msdk.MBridgeConstans;
 import com.mbridge.msdk.out.BannerSize;
-import com.mbridge.msdk.out.MBBannerView;
-
 import org.json.JSONException;
 import org.json.JSONObject;
 
 public class MintegralRtbBannerAd extends MintegralBannerAd {
 
   public MintegralRtbBannerAd(
-      @NonNull MediationBannerAdConfiguration mediationBannerAdConfiguration,
       @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
           mediationAdLoadCallback) {
-    super(mediationBannerAdConfiguration, mediationAdLoadCallback);
+    super(mediationAdLoadCallback);
   }
 
   @Override
-  public void loadAd() {
-    BannerSize bannerSize = getMintegralBannerSizeFromAdMobAdSize(adConfiguration.getAdSize(),
-        adConfiguration.getContext());
+  public void loadAd(MediationBannerAdConfiguration adConfiguration) {
+    BannerSize bannerSize =
+        getMintegralBannerSizeFromAdMobAdSize(
+            adConfiguration.getAdSize(), adConfiguration.getContext(), /* isRtb= */ true);
     if (bannerSize == null) {
       AdError bannerSizeError = MintegralConstants.createAdapterError(ERROR_BANNER_SIZE_UNSUPPORTED,
           String.format("The requested banner size: %s is not supported by Mintegral SDK.",
@@ -67,7 +66,7 @@ public class MintegralRtbBannerAd extends MintegralBannerAd {
       adLoadCallback.onFailure(error);
       return;
     }
-    mbBannerView = new MBBannerView(adConfiguration.getContext());
+    mbBannerView = MintegralFactory.createMBBannerView(adConfiguration.getContext());
     mbBannerView.init(bannerSize, placementId, adUnitId);
     try {
       JSONObject jsonObject = new JSONObject();

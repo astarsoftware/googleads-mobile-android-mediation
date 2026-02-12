@@ -36,6 +36,7 @@ import com.chartboost.sdk.events.ImpressionEvent;
 import com.chartboost.sdk.events.ShowError;
 import com.chartboost.sdk.events.ShowEvent;
 import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
 import com.google.android.gms.ads.mediation.MediationInterstitialAd;
 import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback;
@@ -44,22 +45,18 @@ import com.google.android.gms.ads.mediation.MediationInterstitialAdConfiguration
 public class ChartboostInterstitialAd implements MediationInterstitialAd, InterstitialCallback {
 
   private Interstitial chartboostInterstitialAd;
-
-  private final MediationInterstitialAdConfiguration interstitialAdConfiguration;
   private final MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
       mediationAdLoadCallback;
   private MediationInterstitialAdCallback interstitialAdCallback;
 
   public ChartboostInterstitialAd(
-      @NonNull MediationInterstitialAdConfiguration mediationInterstitialAdConfiguration,
       @NonNull
           MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
               mediationAdLoadCallback) {
-    this.interstitialAdConfiguration = mediationInterstitialAdConfiguration;
     this.mediationAdLoadCallback = mediationAdLoadCallback;
   }
 
-  public void loadAd() {
+  public void loadAd(MediationInterstitialAdConfiguration interstitialAdConfiguration) {
     final Context context = interstitialAdConfiguration.getContext();
     Bundle serverParameters = interstitialAdConfiguration.getServerParameters();
 
@@ -78,8 +75,7 @@ public class ChartboostInterstitialAd implements MediationInterstitialAd, Inters
     }
 
     final String location = chartboostParams.getLocation();
-    ChartboostAdapterUtils.updateCoppaStatus(
-        context, interstitialAdConfiguration.taggedForChildDirectedTreatment());
+    ChartboostAdapterUtils.updateCoppaStatus(context, MobileAds.getRequestConfiguration());
     ChartboostInitializer.getInstance()
         .initialize(
             context,

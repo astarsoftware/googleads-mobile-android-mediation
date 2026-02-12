@@ -30,9 +30,6 @@ import com.google.android.gms.ads.mediation.MediationBannerAd
 import com.google.android.gms.ads.mediation.MediationBannerAdCallback
 import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration
 import net.pubnative.lite.sdk.views.HyBidAdView
-import net.pubnative.lite.sdk.views.HyBidBannerAdView
-import net.pubnative.lite.sdk.views.HyBidLeaderboardAdView
-import net.pubnative.lite.sdk.views.HyBidMRectAdView
 import net.pubnative.lite.sdk.views.PNAdView
 
 /**
@@ -41,7 +38,6 @@ import net.pubnative.lite.sdk.views.PNAdView
 class VerveBannerAd
 @VisibleForTesting
 internal constructor(
-  private val context: Context,
   private val mediationAdLoadCallback:
     MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>,
   private val bidResponse: String,
@@ -50,7 +46,7 @@ internal constructor(
 ) : MediationBannerAd, PNAdView.Listener {
   private var bannerAdCallback: MediationBannerAdCallback? = null
 
-  fun loadAd() {
+  fun loadAd(context: Context) {
     val adViewLayoutParams =
       ViewGroup.LayoutParams(adSize.getWidthInPixels(context), adSize.getHeightInPixels(context))
     adView.layoutParams = adViewLayoutParams
@@ -90,9 +86,9 @@ internal constructor(
   companion object {
     internal fun mapAdSize(adSize: AdSize, context: Context): HyBidAdView? {
       return when (adSize) {
-        AdSize.BANNER -> HyBidBannerAdView(context)
-        AdSize.MEDIUM_RECTANGLE -> HyBidMRectAdView(context)
-        AdSize.LEADERBOARD -> HyBidLeaderboardAdView(context)
+        AdSize.BANNER -> VerveSdkFactory.delegate.createHyBidBannerAdView(context)
+        AdSize.MEDIUM_RECTANGLE -> VerveSdkFactory.delegate.createHyBidMRectAdView(context)
+        AdSize.LEADERBOARD -> VerveSdkFactory.delegate.createHyBidLeaderboardAdView(context)
         else -> null
       }
     }
@@ -118,7 +114,7 @@ internal constructor(
       }
 
       return Result.success(
-        VerveBannerAd(context, mediationAdLoadCallback, bidResponse, verveBannerView, adSize)
+        VerveBannerAd(mediationAdLoadCallback, bidResponse, verveBannerView, adSize)
       )
     }
   }

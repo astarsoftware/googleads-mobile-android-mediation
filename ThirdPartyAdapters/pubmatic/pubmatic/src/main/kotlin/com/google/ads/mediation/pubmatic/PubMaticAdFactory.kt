@@ -1,6 +1,7 @@
 package com.google.ads.mediation.pubmatic
 
 import android.content.Context
+import com.pubmatic.sdk.common.POBAdSize
 import com.pubmatic.sdk.nativead.POBNativeAdLoader
 import com.pubmatic.sdk.openwrap.banner.POBBannerView
 import com.pubmatic.sdk.openwrap.interstitial.POBInterstitial
@@ -16,11 +17,40 @@ import kotlin.time.Duration.Companion.seconds
 interface PubMaticAdFactory {
   fun createPOBInterstitial(context: Context): POBInterstitial
 
+  fun createPOBInterstitial(
+    context: Context,
+    pubId: String,
+    profileId: Int,
+    adUnit: String,
+  ): POBInterstitial
+
   fun createPOBRewardedAd(context: Context): POBRewardedAd
+
+  fun createPOBRewardedAd(
+    context: Context,
+    pubId: String,
+    profileId: Int,
+    adUnit: String,
+  ): POBRewardedAd?
 
   fun createPOBBannerView(context: Context): POBBannerView
 
+  fun createPOBBannerView(
+    context: Context,
+    pubId: String,
+    profileId: Int,
+    adUnit: String,
+    pobAdSize: POBAdSize,
+  ): POBBannerView
+
   fun createPOBNativeAdLoader(context: Context): POBNativeAdLoader
+
+  fun createPOBNativeAdLoader(
+    context: Context,
+    pubId: String,
+    profileId: Int,
+    adUnit: String,
+  ): POBNativeAdLoader
 
   companion object {
     private const val MIN_NUMBER_GENERIC_WORKERS = 2

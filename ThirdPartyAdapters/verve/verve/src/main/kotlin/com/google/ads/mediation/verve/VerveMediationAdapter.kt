@@ -19,6 +19,7 @@ import android.content.Context
 import android.util.Log
 import androidx.annotation.VisibleForTesting
 import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.AdFormat
 import com.google.android.gms.ads.MobileAds
 import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
@@ -148,13 +149,18 @@ class VerveMediationAdapter : RtbAdapter() {
 
   override fun collectSignals(signalData: RtbSignalData, callback: SignalCallbacks) {
     val adSize = signalData.adSize
-    if (adSize != null && VerveBannerAd.mapAdSize(adSize, signalData.context) == null) {
+    if (
+      signalData.configurations.isNotEmpty() &&
+        signalData.configurations.first().format == AdFormat.BANNER &&
+        adSize != null &&
+        VerveBannerAd.mapAdSize(adSize, signalData.context) == null
+    ) {
       val adError =
         AdError(ERROR_CODE_UNSUPPORTED_AD_SIZE, ERROR_MSG_UNSUPPORTED_AD_SIZE, ADAPTER_ERROR_DOMAIN)
       callback.onFailure(adError)
       return
     }
-    val signals = HyBid.getCustomRequestSignalData(signalData.context, "Admob")
+    val signals = HyBid.getEncodedCustomRequestSignalData(signalData.context, "Admob")
     callback.onSuccess(signals)
   }
 
@@ -164,7 +170,7 @@ class VerveMediationAdapter : RtbAdapter() {
   ) {
     VerveBannerAd.newInstance(mediationBannerAdConfiguration, callback).onSuccess {
       bannerAd = it
-      bannerAd.loadAd()
+      bannerAd.loadAd(mediationBannerAdConfiguration.context)
     }
   }
 
@@ -174,7 +180,7 @@ class VerveMediationAdapter : RtbAdapter() {
   ) {
     VerveInterstitialAd.newInstance(mediationInterstitialAdConfiguration, callback).onSuccess {
       interstitialAd = it
-      interstitialAd.loadAd()
+      interstitialAd.loadAd(mediationInterstitialAdConfiguration.context)
     }
   }
 
@@ -184,7 +190,7 @@ class VerveMediationAdapter : RtbAdapter() {
   ) {
     VerveRewardedAd.newInstance(mediationRewardedAdConfiguration, callback).onSuccess {
       rewardedAd = it
-      rewardedAd.loadAd()
+      rewardedAd.loadAd(mediationRewardedAdConfiguration.context)
     }
   }
 
@@ -194,7 +200,7 @@ class VerveMediationAdapter : RtbAdapter() {
   ) {
     VerveRewardedAd.newInstance(mediationRewardedAdConfiguration, callback).onSuccess {
       rewardedInterstitialAd = it
-      rewardedInterstitialAd.loadAd()
+      rewardedInterstitialAd.loadAd(mediationRewardedAdConfiguration.context)
     }
   }
 

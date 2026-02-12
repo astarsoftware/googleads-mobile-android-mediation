@@ -49,8 +49,6 @@ import java.util.Map;
 
 public class VungleRtbInterstitialAd implements MediationInterstitialAd, InterstitialAdListener {
 
-  @NonNull
-  private final MediationInterstitialAdConfiguration mediationInterstitialAdConfiguration;
 
   @NonNull
   private final MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
@@ -64,17 +62,15 @@ public class VungleRtbInterstitialAd implements MediationInterstitialAd, Interst
   private final VungleFactory vungleFactory;
 
   public VungleRtbInterstitialAd(
-      @NonNull MediationInterstitialAdConfiguration mediationInterstitialAdConfiguration,
       @NonNull
           MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
               mediationAdLoadCallback,
       VungleFactory vungleFactory) {
-    this.mediationInterstitialAdConfiguration = mediationInterstitialAdConfiguration;
     this.mediationAdLoadCallback = mediationAdLoadCallback;
     this.vungleFactory = vungleFactory;
   }
 
-  public void render() {
+  public void render(@NonNull MediationInterstitialAdConfiguration mediationInterstitialAdConfiguration) {
     Bundle mediationExtras = mediationInterstitialAdConfiguration.getMediationExtras();
     Bundle serverParameters = mediationInterstitialAdConfiguration.getServerParameters();
 

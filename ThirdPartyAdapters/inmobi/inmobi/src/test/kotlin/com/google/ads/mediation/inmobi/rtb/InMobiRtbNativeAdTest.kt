@@ -2,6 +2,7 @@ package com.google.ads.mediation.inmobi.rtb
 
 import android.content.Context
 import android.net.Uri
+import android.view.View
 import androidx.test.core.app.ApplicationProvider
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.google.ads.mediation.inmobi.InMobiAdFactory
@@ -9,7 +10,6 @@ import com.google.ads.mediation.inmobi.InMobiAdapterUtils
 import com.google.ads.mediation.inmobi.InMobiConstants
 import com.google.ads.mediation.inmobi.InMobiInitializer
 import com.google.ads.mediation.inmobi.InMobiNativeWrapper
-import com.google.ads.mediation.inmobi.InMobiNetworkValues
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback
 import com.google.android.gms.ads.mediation.MediationNativeAdCallback
@@ -19,6 +19,7 @@ import com.google.android.gms.ads.nativead.NativeAdOptions
 import com.google.common.truth.Truth.assertThat
 import com.inmobi.ads.AdMetaInfo
 import com.inmobi.ads.InMobiAdRequestStatus
+import java.net.URL
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -28,7 +29,6 @@ import org.mockito.kotlin.argumentCaptor
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
-import java.net.URL
 
 @RunWith(AndroidJUnit4::class)
 class InMobiRtbNativeAdTest {
@@ -61,7 +61,7 @@ class InMobiRtbNativeAdTest {
         nativeAdConfiguration,
         mediationAdLoadCallback,
         inMobiInitializer,
-        inMobiAdFactory
+        inMobiAdFactory,
       )
   }
 
@@ -74,8 +74,6 @@ class InMobiRtbNativeAdTest {
       .isEqualTo(wrappedNativeAd.adDescription)
     assertThat(rtbNativeAd.inMobiUnifiedNativeAdMapper.callToAction)
       .isEqualTo(wrappedNativeAd.adCtaText)
-    assertThat(rtbNativeAd.inMobiUnifiedNativeAdMapper.extras.get(InMobiNetworkValues.LANDING_URL))
-      .isEqualTo(wrappedNativeAd.adLandingPageUrl)
     assertThat(rtbNativeAd.inMobiUnifiedNativeAdMapper.icon.drawable).isNull()
     val iconURL = URL(wrappedNativeAd.adIconUrl)
     val iconUri = Uri.parse(iconURL.toURI().toString())
@@ -84,19 +82,6 @@ class InMobiRtbNativeAdTest {
     assertThat(rtbNativeAd.inMobiUnifiedNativeAdMapper.hasVideoContent()).isTrue()
 
     verify(mediationAdLoadCallback).onSuccess(any())
-  }
-
-  // TODO(b/283150473) : Add a test case covering NativeAdOptions = null
-  @Test
-  fun onAdLoadSucceeded_whenNativeAdOptionsInvalid_invokesFailureCallback() {
-    whenever(wrappedNativeAd.adTitle).thenReturn(null)
-
-    rtbNativeAd.onAdLoadSucceeded(inMobiNativeWrapper.inMobiNative, adMetaInfo)
-
-    val captor = argumentCaptor<AdError>()
-    verify(mediationAdLoadCallback).onFailure(captor.capture())
-    assertThat(captor.firstValue.code).isEqualTo(InMobiConstants.ERROR_MISSING_NATIVE_ASSETS)
-    assertThat(captor.firstValue.domain).isEqualTo(InMobiConstants.ERROR_DOMAIN)
   }
 
   @Test
@@ -163,12 +148,20 @@ class InMobiRtbNativeAdTest {
     verify(mediationNativeAdCallback).reportAdImpression()
   }
 
+  @Test
+  fun untrackView_invokesUntrackView() {
+    // mimic an ad load first
+    rtbNativeAd.onAdLoadSucceeded(inMobiNativeWrapper.inMobiNative, adMetaInfo)
+
+    rtbNativeAd.inMobiUnifiedNativeAdMapper.untrackView(View(context))
+
+    verify(wrappedNativeAd).unTrackViews()
+  }
+
   private fun setupWrappedInMobiNativeAd(): Unit {
     whenever(wrappedNativeAd.adCtaText).thenReturn("SomeCtaText")
     whenever(wrappedNativeAd.adDescription).thenReturn("AdDescription")
     whenever(wrappedNativeAd.adIconUrl).thenReturn("http://www.example.com/docs/resource1.html")
-    whenever(wrappedNativeAd.adLandingPageUrl)
-      .thenReturn("http://www.landing.com/docs/resource1.html")
     whenever(wrappedNativeAd.adTitle).thenReturn("adTitle")
     whenever(wrappedNativeAd.isVideo).thenReturn(true)
   }

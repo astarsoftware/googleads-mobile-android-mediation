@@ -24,6 +24,16 @@ import android.widget.FrameLayout
 import android.widget.ImageView
 import androidx.core.net.toUri
 import com.bumptech.glide.Glide
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.ADAPTER_ERROR_DOMAIN
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.ERROR_MISSING_AD_UNIT_ID
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.ERROR_MISSING_AD_UNIT_ID_MSG
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.ERROR_MISSING_OR_INVALID_PROFILE_ID
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.ERROR_MISSING_OR_INVALID_PROFILE_ID_MSG
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.ERROR_MISSING_PUBLISHER_ID
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.ERROR_MISSING_PUBLISHER_ID_MSG
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.KEY_AD_UNIT
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.KEY_PROFILE_ID
+import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.KEY_PUBLISHER_ID
 import com.google.ads.mediation.pubmatic.PubMaticMediationAdapter.Companion.SDK_ERROR_DOMAIN
 import com.google.ads.mediation.pubmatic.PubMaticUtils.runtimeGmaSdkListensToAdapterReportedImpressions
 import com.google.android.gms.ads.AdError
@@ -37,7 +47,12 @@ import com.pubmatic.sdk.nativead.POBNativeAd
 import com.pubmatic.sdk.nativead.POBNativeAdListener
 import com.pubmatic.sdk.nativead.POBNativeAdLoader
 import com.pubmatic.sdk.nativead.POBNativeAdLoaderListener
+import com.pubmatic.sdk.nativead.request.POBNativeRequestDataAsset
+import com.pubmatic.sdk.nativead.request.POBNativeRequestImageAsset
+import com.pubmatic.sdk.nativead.request.POBNativeRequestTitleAsset
 import com.pubmatic.sdk.openwrap.core.POBConstants.KEY_POB_ADMOB_WATERMARK
+import com.pubmatic.sdk.openwrap.core.nativead.POBNativeDataAssetType
+import com.pubmatic.sdk.openwrap.core.nativead.POBNativeImageAssetType
 import com.pubmatic.sdk.openwrap.core.signal.POBBiddingHost
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
@@ -58,8 +73,9 @@ private constructor(
     MediationAdLoadCallback<NativeAdMapper, MediationNativeAdCallback>,
   private val bidResponse: String,
   private val watermark: String,
-  private val pubMaticAdFactory: PubMaticAdFactory,
   private val adapterScope: CoroutineScope,
+  private val pobNativeAdLoader: POBNativeAdLoader,
+  private val isRtb: Boolean,
 ) : NativeAdMapper(), POBNativeAdLoaderListener, POBNativeAdListener {
 
   private var pobNativeAd: POBNativeAd? = null
@@ -67,10 +83,61 @@ private constructor(
   private var mediationNativeAdCallback: MediationNativeAdCallback? = null
 
   fun loadAd() {
-    val pobNativeAdLoader = pubMaticAdFactory.createPOBNativeAdLoader(context)
     pobNativeAdLoader.setAdLoaderListener(this)
-    pobNativeAdLoader.addExtraInfo(KEY_POB_ADMOB_WATERMARK, watermark)
-    pobNativeAdLoader.loadAd(bidResponse, POBBiddingHost.ADMOB)
+    if (isRtb) {
+      pobNativeAdLoader.addExtraInfo(KEY_POB_ADMOB_WATERMARK, watermark)
+      pobNativeAdLoader.loadAd(bidResponse, POBBiddingHost.ADMOB)
+      return
+    }
+
+    pobNativeAdLoader.setNativeCustomAssets(
+      listOf(
+        // Defined based on
+        // https://support.google.com/admanager/answer/7031536?hl=en#:~:text=The%20secondary%20body%20text%20(for,%E2%80%A0.
+        // the text length and the image dimensions were selected arbitraliry. Adjust them if
+        // needed.
+        POBNativeRequestTitleAsset(
+          /* id= */ (0..Int.MAX_VALUE).random(),
+          /* required= */ true,
+          /* length= */ 100,
+        ),
+        POBNativeRequestDataAsset(
+          /* id = */ (0..Int.MAX_VALUE).random(),
+          /* required = */ true,
+          /* type = */ POBNativeDataAssetType.CTA_TEXT,
+        ),
+        POBNativeRequestImageAsset(
+          /* id = */ (0..Int.MAX_VALUE).random(),
+          /* required = */ false,
+          /* type = */ POBNativeImageAssetType.ICON,
+          /* minimumWidth = */ 30,
+          /* minimumHeight = */ 30,
+        ),
+        POBNativeRequestImageAsset(
+          /* id = */ (0..Int.MAX_VALUE).random(),
+          /* required = */ false,
+          /* type = */ POBNativeImageAssetType.MAIN,
+          /* minimumWidth = */ 100,
+          /* minimumHeight = */ 100,
+        ),
+        POBNativeRequestDataAsset(
+          /* id = */ (0..Int.MAX_VALUE).random(),
+          /* required = */ false,
+          /* type = */ POBNativeDataAssetType.DESCRIPTION,
+        ),
+        POBNativeRequestDataAsset(
+          /* id = */ (0..Int.MAX_VALUE).random(),
+          /* required = */ false,
+          /* type = */ POBNativeDataAssetType.PRICE,
+        ),
+        POBNativeRequestDataAsset(
+          /* id = */ (0..Int.MAX_VALUE).random(),
+          /* required = */ false,
+          /* type = */ POBNativeDataAssetType.RATING,
+        ),
+      )
+    )
+    pobNativeAdLoader.loadAd()
   }
 
   override fun onAdReceived(pobNativeAdLoader: POBNativeAdLoader, pobNativeAd: POBNativeAd) {
@@ -247,16 +314,55 @@ private constructor(
       pubMaticAdFactory: PubMaticAdFactory,
       coroutineContext: CoroutineContext =
         PubMaticAdFactory.BACKGROUND_EXECUTOR.asCoroutineDispatcher(),
+      isRtb: Boolean,
     ): Result<PubMaticNativeAd> {
+      val context = mediationNativeAdConfiguration.context
       val adapterScope = CoroutineScope(coroutineContext)
+      val pobNativeAdLoader =
+        if (isRtb) {
+          pubMaticAdFactory.createPOBNativeAdLoader(context)
+        } else {
+          val serverParameters = mediationNativeAdConfiguration.serverParameters
+          val pubId = serverParameters.getString(KEY_PUBLISHER_ID)
+          val profileId = serverParameters.getString(KEY_PROFILE_ID)?.toIntOrNull()
+          val adUnit = serverParameters.getString(KEY_AD_UNIT)
+          if (pubId.isNullOrEmpty()) {
+            val adError =
+              AdError(
+                ERROR_MISSING_PUBLISHER_ID,
+                ERROR_MISSING_PUBLISHER_ID_MSG,
+                ADAPTER_ERROR_DOMAIN,
+              )
+            mediationNativeAdLoadCallback.onFailure(adError)
+            return Result.failure(NoSuchElementException(adError.toString()))
+          }
+          if (profileId == null) {
+            val adError =
+              AdError(
+                ERROR_MISSING_OR_INVALID_PROFILE_ID,
+                ERROR_MISSING_OR_INVALID_PROFILE_ID_MSG,
+                ADAPTER_ERROR_DOMAIN,
+              )
+            mediationNativeAdLoadCallback.onFailure(adError)
+            return Result.failure(NoSuchElementException(adError.toString()))
+          }
+          if (adUnit.isNullOrEmpty()) {
+            val adError =
+              AdError(ERROR_MISSING_AD_UNIT_ID, ERROR_MISSING_AD_UNIT_ID_MSG, ADAPTER_ERROR_DOMAIN)
+            mediationNativeAdLoadCallback.onFailure(adError)
+            return Result.failure(NoSuchElementException(adError.toString()))
+          }
+          pubMaticAdFactory.createPOBNativeAdLoader(context, pubId, profileId, adUnit)
+        }
       return Result.success(
         PubMaticNativeAd(
-          context = mediationNativeAdConfiguration.context,
+          context,
           mediationAdLoadCallback = mediationNativeAdLoadCallback,
           bidResponse = mediationNativeAdConfiguration.bidResponse,
           watermark = mediationNativeAdConfiguration.watermark,
-          pubMaticAdFactory = pubMaticAdFactory,
           adapterScope,
+          pobNativeAdLoader,
+          isRtb,
         )
       )
     }

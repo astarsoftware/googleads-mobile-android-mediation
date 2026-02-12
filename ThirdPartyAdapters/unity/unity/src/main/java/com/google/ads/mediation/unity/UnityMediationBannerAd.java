@@ -25,6 +25,7 @@ import static com.google.ads.mediation.unity.UnityMediationAdapter.KEY_WATERMARK
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import androidx.annotation.Keep;
@@ -40,6 +41,7 @@ import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration;
 import com.unity3d.ads.IUnityAdsInitializationListener;
 import com.unity3d.ads.UnityAds;
 import com.unity3d.ads.UnityAdsLoadOptions;
+import com.unity3d.ads.metadata.MetaData;
 import com.unity3d.services.banners.BannerErrorInfo;
 import com.unity3d.services.banners.BannerView;
 import com.unity3d.services.banners.UnityBannerSize;
@@ -65,8 +67,6 @@ public class UnityMediationBannerAd implements MediationBannerAd, BannerView.ILi
   private final MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
       mediationBannerAdLoadCallback;
 
-  private final MediationBannerAdConfiguration mediationBannerAdConfiguration;
-
   private final UnityInitializer unityInitializer;
 
   private final UnityBannerViewFactory unityBannerViewFactory;
@@ -81,14 +81,12 @@ public class UnityMediationBannerAd implements MediationBannerAd, BannerView.ILi
       "Unity Ads initialization failed for game ID '%s' with error message: %s";
 
   public UnityMediationBannerAd(
-      @NonNull MediationBannerAdConfiguration bannerAdConfiguration,
       @NonNull
           MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
               bannerAdLoadCallback,
       @NonNull UnityInitializer unityInitializer,
       @NonNull UnityBannerViewFactory unityBannerViewFactory,
       @NonNull UnityAdsLoader unityAdsLoader) {
-    this.mediationBannerAdConfiguration = bannerAdConfiguration;
     this.mediationBannerAdLoadCallback = bannerAdLoadCallback;
     this.unityBannerViewFactory = unityBannerViewFactory;
     this.unityInitializer = unityInitializer;
@@ -157,7 +155,7 @@ public class UnityMediationBannerAd implements MediationBannerAd, BannerView.ILi
     }
   }
 
-  public void loadAd() {
+  public void loadAd(MediationBannerAdConfiguration mediationBannerAdConfiguration) {
     Context context = mediationBannerAdConfiguration.getContext();
     Bundle serverParameters = mediationBannerAdConfiguration.getServerParameters();
     AdSize adSize = mediationBannerAdConfiguration.getAdSize();
@@ -188,8 +186,13 @@ public class UnityMediationBannerAd implements MediationBannerAd, BannerView.ILi
     }
     final Activity activity = (Activity) context;
 
+    final String adMarkup = mediationBannerAdConfiguration.getBidResponse();
+
+    // It is RTB if adMarkup is not empty.
+    boolean isRtb = !TextUtils.isEmpty(adMarkup);
+
     final UnityBannerSize unityBannerSize =
-        UnityAdsAdapterUtils.getUnityBannerSize(context, adSize);
+        UnityAdsAdapterUtils.getUnityBannerSize(context, adSize, isRtb);
     if (unityBannerSize == null) {
       String errorMessage = ERROR_MSG_NO_MATCHING_AD_SIZE + adSize;
       AdError adError =
@@ -199,8 +202,6 @@ public class UnityMediationBannerAd implements MediationBannerAd, BannerView.ILi
       mediationBannerAdLoadCallback.onFailure(adError);
       return;
     }
-
-    final String adMarkup = mediationBannerAdConfiguration.getBidResponse();
 
     unityInitializer.initializeUnityAds(
         context,
@@ -215,8 +216,8 @@ public class UnityMediationBannerAd implements MediationBannerAd, BannerView.ILi
                     gameId, bannerPlacementId);
             Log.d(UnityMediationAdapter.TAG, logMessage);
 
-            UnityAdsAdapterUtils.setCoppa(
-                MobileAds.getRequestConfiguration().getTagForChildDirectedTreatment(), context);
+            UnityAdsAdapterUtils.setUnityAdsPrivacy(
+                MobileAds.getRequestConfiguration(), new MetaData(context));
 
             if (unityBannerViewWrapper == null) {
               unityBannerViewWrapper =

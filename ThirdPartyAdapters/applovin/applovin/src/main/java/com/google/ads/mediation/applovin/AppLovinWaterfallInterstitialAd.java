@@ -18,7 +18,7 @@ import static com.applovin.sdk.AppLovinAdSize.INTERSTITIAL;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.APPLOVIN_SDK_ERROR_DOMAIN;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_AD_ALREADY_REQUESTED;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_DOMAIN;
-import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_INVALID_SERVER_PARAMETERS;
+import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_MISSING_SDK_KEY;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_MSG_MISSING_SDK;
 
 import android.content.Context;
@@ -54,32 +54,26 @@ public class AppLovinWaterfallInterstitialAd extends AppLovinInterstitialRendere
 
   private AppLovinSdk sdk;
 
-  private Context context;
-
-  private Bundle networkExtras;
-
   // Flag to let multiple loading of ads
   private boolean enableMultipleAdLoading = false;
 
   public AppLovinWaterfallInterstitialAd(
-      @NonNull MediationInterstitialAdConfiguration adConfiguration,
       @NonNull
           MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
               callback,
       @NonNull AppLovinInitializer appLovinInitializer,
       @NonNull AppLovinAdFactory appLovinAdFactory) {
-    super(adConfiguration, callback, appLovinInitializer, appLovinAdFactory);
+    super(callback, appLovinInitializer, appLovinAdFactory);
   }
 
   @Override
-  public void loadAd() {
-    context = interstitialAdConfiguration.getContext();
+  public void loadAd(@NonNull MediationInterstitialAdConfiguration interstitialAdConfiguration) {
+    Context context = interstitialAdConfiguration.getContext();
     Bundle serverParameters = interstitialAdConfiguration.getServerParameters();
     String sdkKey = serverParameters.getString(ServerParameterKeys.SDK_KEY);
     if (TextUtils.isEmpty(sdkKey)) {
       AdError error =
-          new AdError(
-              ERROR_INVALID_SERVER_PARAMETERS, ERROR_MSG_MISSING_SDK, APPLOVIN_SDK_ERROR_DOMAIN);
+          new AdError(ERROR_MISSING_SDK_KEY, ERROR_MSG_MISSING_SDK, APPLOVIN_SDK_ERROR_DOMAIN);
       Log.e(TAG, error.getMessage());
       interstitialAdLoadCallback.onFailure(error);
       return;
@@ -88,6 +82,7 @@ public class AppLovinWaterfallInterstitialAd extends AppLovinInterstitialRendere
     if (AppLovinUtils.isMultiAdsEnabled()) {
       enableMultipleAdLoading = true;
     }
+    networkExtras = interstitialAdConfiguration.getMediationExtras();
 
     appLovinInitializer.initialize(
         context,
@@ -110,7 +105,6 @@ public class AppLovinWaterfallInterstitialAd extends AppLovinInterstitialRendere
 
             // Store parent objects.
             sdk = appLovinInitializer.retrieveSdk(context);
-            AppLovinWaterfallInterstitialAd.this.networkExtras = networkExtras;
 
             Log.d(TAG, "Requesting interstitial for zone: " + zoneId);
 

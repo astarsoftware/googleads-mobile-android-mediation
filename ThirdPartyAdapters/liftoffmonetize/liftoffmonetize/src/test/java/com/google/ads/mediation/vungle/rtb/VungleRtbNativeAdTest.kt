@@ -40,7 +40,6 @@ import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.eq
 import org.mockito.kotlin.mock
 import org.mockito.kotlin.never
-import org.mockito.kotlin.times
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.verifyNoInteractions
 import org.mockito.kotlin.verifyNoMoreInteractions
@@ -73,20 +72,16 @@ class VungleRtbNativeAdTest {
   private val vungleFactory =
     mock<VungleFactory> { on { createNativeAd(any(), any()) } doReturn vungleNativeAd }
   private val containerView = FrameLayout(context)
+  private val mediationNativeAdConfiguration =
+    createMediationNativeAdConfiguration(
+      context = context,
+      serverParameters = bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
+      bidResponse = TEST_BID_RESPONSE,
+    )
 
   @Before
   fun setUp() {
-    adapterRtbNativeAd =
-      VungleRtbNativeAd(
-        createMediationNativeAdConfiguration(
-          context = context,
-          serverParameters =
-            bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
-          bidResponse = TEST_BID_RESPONSE,
-        ),
-        nativeAdLoadCallback,
-        vungleFactory,
-      )
+    adapterRtbNativeAd = VungleRtbNativeAd(nativeAdLoadCallback, vungleFactory)
 
     doAnswer { invocation ->
         val args: Array<Any> = invocation.arguments
@@ -100,7 +95,7 @@ class VungleRtbNativeAdTest {
   fun onAdLoaded_mapsLiftoffNativeAdAssetsToGmaAssetsAndCallsLoadSuccess() {
     Mockito.mockStatic(VungleInitializer::class.java).use {
       whenever(VungleInitializer.getInstance()) doReturn vungleInitializer
-      adapterRtbNativeAd.render()
+      adapterRtbNativeAd.render(mediationNativeAdConfiguration)
     }
 
     adapterRtbNativeAd.onAdLoaded(vungleNativeAd)
@@ -114,26 +109,23 @@ class VungleRtbNativeAdTest {
     assertThat(adIcon.drawable).isNull()
     assertThat(adIcon.uri.toString()).isEqualTo(APP_ICON_URL)
     assertThat(adIcon.scale).isEqualTo(1)
-    assertThat(adapterRtbNativeAd.overrideImpressionRecording).isFalse()
+    assertThat(adapterRtbNativeAd.overrideImpressionRecording).isTrue()
     assertThat(adapterRtbNativeAd.overrideClickHandling).isTrue()
     verify(nativeAdLoadCallback).onSuccess(adapterRtbNativeAd)
   }
 
   @Test
   fun onAdLoaded_ifRuntimeGmaSdkDoesNotListenToAdapterReportedImpressions_doesNotSetOverrideImpressionRecordingAsTrue() {
-    adapterRtbNativeAd =
-      VungleRtbNativeAd(
-        createMediationNativeAdConfiguration(
-          context = context,
-          serverParameters =
-            bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
-        ),
-        nativeAdLoadCallback,
-        vungleFactory,
+    val adConfiguration =
+      createMediationNativeAdConfiguration(
+        context = context,
+        serverParameters =
+          bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
       )
+    adapterRtbNativeAd = VungleRtbNativeAd(nativeAdLoadCallback, vungleFactory)
     Mockito.mockStatic(VungleInitializer::class.java).use {
       whenever(VungleInitializer.getInstance()) doReturn vungleInitializer
-      adapterRtbNativeAd.render()
+      adapterRtbNativeAd.render(adConfiguration)
     }
 
     Mockito.mockStatic(MobileAds::class.java).use {
@@ -147,19 +139,16 @@ class VungleRtbNativeAdTest {
 
   @Test
   fun onAdLoaded_ifRuntimeGmaSdkDoesNotListenToAdapterReportedImpressions_doesNotSetOverrideImpressionRecordingAsTrueForLowerVersions() {
-    adapterRtbNativeAd =
-      VungleRtbNativeAd(
-        createMediationNativeAdConfiguration(
-          context = context,
-          serverParameters =
-            bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
-        ),
-        nativeAdLoadCallback,
-        vungleFactory,
+    val adConfiguration =
+      createMediationNativeAdConfiguration(
+        context = context,
+        serverParameters =
+          bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
       )
+    adapterRtbNativeAd = VungleRtbNativeAd(nativeAdLoadCallback, vungleFactory)
     Mockito.mockStatic(VungleInitializer::class.java).use {
       whenever(VungleInitializer.getInstance()) doReturn vungleInitializer
-      adapterRtbNativeAd.render()
+      adapterRtbNativeAd.render(adConfiguration)
     }
 
     Mockito.mockStatic(MobileAds::class.java).use {
@@ -173,19 +162,16 @@ class VungleRtbNativeAdTest {
 
   @Test
   fun onAdLoaded_ifRuntimeGmaSdkListensToAdapterReportedImpressions_setsOverrideImpressionRecordingAsTrueForHigherVersions() {
-    adapterRtbNativeAd =
-      VungleRtbNativeAd(
-        createMediationNativeAdConfiguration(
-          context = context,
-          serverParameters =
-            bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
-        ),
-        nativeAdLoadCallback,
-        vungleFactory,
+    val adConfiguration =
+      createMediationNativeAdConfiguration(
+        context = context,
+        serverParameters =
+          bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
       )
+    adapterRtbNativeAd = VungleRtbNativeAd(nativeAdLoadCallback, vungleFactory)
     Mockito.mockStatic(VungleInitializer::class.java).use {
       whenever(VungleInitializer.getInstance()) doReturn vungleInitializer
-      adapterRtbNativeAd.render()
+      adapterRtbNativeAd.render(adConfiguration)
     }
 
     Mockito.mockStatic(MobileAds::class.java).use {
@@ -199,19 +185,16 @@ class VungleRtbNativeAdTest {
 
   @Test
   fun onAdLoaded_ifRuntimeGmaSdkListensToAdapterReportedImpressions_setsOverrideImpressionRecordingAsTrueForLowerVersions() {
-    adapterRtbNativeAd =
-      VungleRtbNativeAd(
-        createMediationNativeAdConfiguration(
-          context = context,
-          serverParameters =
-            bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
-        ),
-        nativeAdLoadCallback,
-        vungleFactory,
+    val adConfiguration =
+      createMediationNativeAdConfiguration(
+        context = context,
+        serverParameters =
+          bundleOf(KEY_APP_ID to TEST_APP_ID, KEY_PLACEMENT_ID to TEST_PLACEMENT_ID),
       )
+    adapterRtbNativeAd = VungleRtbNativeAd(nativeAdLoadCallback, vungleFactory)
     Mockito.mockStatic(VungleInitializer::class.java).use {
       whenever(VungleInitializer.getInstance()) doReturn vungleInitializer
-      adapterRtbNativeAd.render()
+      adapterRtbNativeAd.render(adConfiguration)
     }
 
     Mockito.mockStatic(MobileAds::class.java).use {
@@ -245,7 +228,7 @@ class VungleRtbNativeAdTest {
   private fun renderAdAndMockLoadSuccess() {
     Mockito.mockStatic(VungleInitializer::class.java).use {
       whenever(VungleInitializer.getInstance()) doReturn vungleInitializer
-      adapterRtbNativeAd.render()
+      adapterRtbNativeAd.render(mediationNativeAdConfiguration)
     }
     adapterRtbNativeAd.onAdLoaded(vungleNativeAd)
   }
@@ -364,20 +347,6 @@ class VungleRtbNativeAdTest {
     val clickableAssets = mapOf(ASSET_ICON to iconView)
     val overlayView = FrameLayout(context)
     containerView.addView(overlayView)
-
-    adapterRtbNativeAd.trackViews(containerView, clickableAssets, emptyMap())
-
-    verify(vungleNativeAd, never()).registerViewForInteraction(any(), any(), any(), any())
-  }
-
-  @Test
-  fun trackViews_ifVungleNativeAdCannotPlayAd_doesNotRegisterView() {
-    renderAdAndMockLoadSuccess()
-    val iconView = ImageView(context)
-    val clickableAssets = mapOf(ASSET_ICON to iconView)
-    val overlayView = FrameLayout(context)
-    containerView.addView(overlayView)
-    whenever(vungleNativeAd.canPlayAd()) doReturn false
 
     adapterRtbNativeAd.trackViews(containerView, clickableAssets, emptyMap())
 

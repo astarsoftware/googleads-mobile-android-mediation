@@ -16,7 +16,7 @@ package com.google.ads.mediation.applovin;
 
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_BANNER_SIZE_MISMATCH;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_DOMAIN;
-import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_INVALID_SERVER_PARAMETERS;
+import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_MISSING_SDK_KEY;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_MSG_BANNER_SIZE_MISMATCH;
 import static com.google.ads.mediation.applovin.AppLovinMediationAdapter.ERROR_MSG_MISSING_SDK;
 
@@ -65,14 +65,12 @@ public class AppLovinBannerAd
 
   // Parent objects.
   private AppLovinSdk sdk;
-  private Context context;
 
   // Controlled fields.
   private String zoneId;
 
   private final AppLovinInitializer appLovinInitializer;
   private final AppLovinAdFactory appLovinAdFactory;
-  private final MediationBannerAdConfiguration mediationBannerAdConfiguration;
   private final MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
       mediationAdLoadCallback;
   private MediationBannerAdCallback bannerAdCallback;
@@ -80,27 +78,23 @@ public class AppLovinBannerAd
   private static final String TAG = AppLovinBannerAd.class.getSimpleName();
 
   private AppLovinBannerAd(
-      @NonNull MediationBannerAdConfiguration mediationBannerAdConfiguration,
       @NonNull
           MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
               mediationAdLoadCallback,
       @NonNull AppLovinInitializer appLovinInitializer,
       @NonNull AppLovinAdFactory appLovinAdFactory) {
-    this.mediationBannerAdConfiguration = mediationBannerAdConfiguration;
     this.mediationAdLoadCallback = mediationAdLoadCallback;
     this.appLovinInitializer = appLovinInitializer;
     this.appLovinAdFactory = appLovinAdFactory;
   }
 
   public static AppLovinBannerAd newInstance(
-      @NonNull MediationBannerAdConfiguration mediationBannerAdConfiguration,
       @NonNull
           MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
               mediationAdLoadCallback,
       @NonNull AppLovinInitializer appLovinInitializer,
       @NonNull AppLovinAdFactory appLovinAdFactory) {
     return new AppLovinBannerAd(
-        mediationBannerAdConfiguration,
         mediationAdLoadCallback,
         appLovinInitializer,
         appLovinAdFactory);
@@ -111,14 +105,13 @@ public class AppLovinBannerAd
    * communicates the response through the {@link MediationAdLoadCallback} declared when
    * instanciating the Banner class
    */
-  public void loadAd() {
-    context = mediationBannerAdConfiguration.getContext();
+  public void loadAd(@NonNull MediationBannerAdConfiguration mediationBannerAdConfiguration) {
+    Context context = mediationBannerAdConfiguration.getContext();
     Bundle serverParameters = mediationBannerAdConfiguration.getServerParameters();
     final AdSize adSize = mediationBannerAdConfiguration.getAdSize();
     String sdkKey = serverParameters.getString(ServerParameterKeys.SDK_KEY);
     if (TextUtils.isEmpty(sdkKey)) {
-      AdError error =
-          new AdError(ERROR_INVALID_SERVER_PARAMETERS, ERROR_MSG_MISSING_SDK, ERROR_DOMAIN);
+      AdError error = new AdError(ERROR_MISSING_SDK_KEY, ERROR_MSG_MISSING_SDK, ERROR_DOMAIN);
       Log.e(TAG, error.getMessage());
       mediationAdLoadCallback.onFailure(error);
       return;

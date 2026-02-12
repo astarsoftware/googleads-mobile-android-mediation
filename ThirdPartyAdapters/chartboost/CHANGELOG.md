@@ -1,7 +1,70 @@
 ## Chartboost Android Mediation Adapter Changelog
 
-#### Version 9.9.1.0 (In progress)
-- Updated onAdExpired event to work with the latest Chartboost SDK.
+#### Version 9.11.1.0 (In progress)
+
+#### Version 9.11.0.1
+- Added support for forwarding the `tagForUnderAgeOfConsent` Google Mobile Ads
+SDK parameter to the Chartboost SDK.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- Chartboost SDK version 9.11.0.
+
+#### Version 9.11.0.0
+- Verified compatibility with Chartboost SDK version 9.11.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- Chartboost SDK version 9.11.0.
+
+#### Version 9.10.2.0
+- Verified compatibility with Chartboost SDK version 9.10.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- Chartboost SDK version 9.10.2.
+
+#### Version 9.10.1.0
+- Verified compatibility with Chartboost SDK version 9.10.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- Chartboost SDK version 9.10.1.
+
+#### Version 9.10.0.1
+- Removed class-level references to Context. Can help reduce memory leak issues.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- Chartboost SDK version 9.10.0.
+
+#### Version 9.10.0.0
+- Verified compatibility with Chartboost SDK version 9.10.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.6.0.
+- Chartboost SDK version 9.10.0.
+
+#### Version 9.9.3.0
+- Verified compatibility with Chartboost SDK version 9.9.3.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- Chartboost SDK version 9.9.3.
+
+#### Version 9.9.2.0
+- Verified compatibility with Chartboost SDK version 9.9.2.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- Chartboost SDK version 9.9.2.
+
+#### Version 9.9.1.0
+- Verified compatibility with Chartboost SDK version 9.9.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.4.0.
+- Chartboost SDK version 9.9.1.
 
 #### Version 9.9.0.0
 - Verified compatibility with Chartboost SDK version 9.9.0.

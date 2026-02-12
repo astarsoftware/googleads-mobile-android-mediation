@@ -1,4 +1,51 @@
 ## BidMachine Android Mediation Adapter Changelog
 
 #### Next Version
+- Updated BidMachine API use for AdPlacementConfig.
+
+#### Version 3.5.1.1
+- Added support for forwarding the tagForUnderAgeOfConsent Google Mobile Ads SDK
+parameter to the BidMachine SDK.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- BidMachine SDK version 3.5.1.
+
+#### Version 3.5.1.0
+- Verified compatibility with BidMachine SDK version 3.5.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- BidMachine SDK version 3.5.1.
+
+#### Version 3.5.0.0
+- Verified compatibility with BidMachine SDK version 3.5.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- BidMachine SDK version 3.5.0.
+
+#### Version 3.4.0.1
+- Removed class-level references to `Context` objects to help with memory leak issues.
+- Updated adapter to support banner ad requests that are close in size to its
+supported formats, instead of requiring an exact size match.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- BidMachine SDK version 3.4.0
+
+#### Version 3.4.0.0
+- Added waterfall support for banner, interstitial, rewarded and native ad formats.
+- Adapter now forwards `onAdOpened()` with `onAdImpression() ` for full-screen ads.
+- Verified compatibility with BidMachine SDK version 3.4.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.6.0.
+- BidMachine SDK version 3.4.0.
+
+#### Version 3.3.0.0
 - Initial release.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- BidMachine SDK version 3.3.0.

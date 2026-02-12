@@ -34,16 +34,16 @@ import com.mbridge.msdk.out.MBBannerView;
 public class MintegralWaterfallBannerAd extends MintegralBannerAd {
 
   public MintegralWaterfallBannerAd(
-      @NonNull MediationBannerAdConfiguration mediationBannerAdConfiguration,
       @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
           mediationAdLoadCallback) {
-    super(mediationBannerAdConfiguration, mediationAdLoadCallback);
+    super(mediationAdLoadCallback);
   }
 
   @Override
-  public void loadAd() {
-    BannerSize bannerSize = getMintegralBannerSizeFromAdMobAdSize(adConfiguration.getAdSize(),
-        adConfiguration.getContext());
+  public void loadAd(MediationBannerAdConfiguration adConfiguration) {
+    BannerSize bannerSize =
+        getMintegralBannerSizeFromAdMobAdSize(
+            adConfiguration.getAdSize(), adConfiguration.getContext(), /* isRtb= */ false);
     if (bannerSize == null) {
       AdError bannerSizeError = MintegralConstants.createAdapterError(ERROR_BANNER_SIZE_UNSUPPORTED,
           String.format("The requested banner size: %s is not supported by Mintegral SDK.",

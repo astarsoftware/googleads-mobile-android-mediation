@@ -1,5 +1,62 @@
 ## IronSource Android Mediation Adapter Changelog
 
+#### Version 9.3.0.1
+- Added support for forwarding the `tagForUnderAgeOfConsent` Google Mobile Ads
+SDK parameter to the ironSource SDK.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- IronSource SDK version 9.3.0.
+
+#### Version 9.3.0.0
+- Verified compatibility with ironSource SDK version 9.3.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- IronSource SDK version 9.3.0.
+
+#### Version 9.2.0.0
+- Verified compatibility with ironSource SDK version 9.2.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.8.0.
+- IronSource SDK version 9.2.0.
+
+#### Version 9.1.0.0
+- Verified compatibility with ironSource SDK version 9.1.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- IronSource SDK version 9.1.0.
+
+#### Version 9.0.0.1
+- Removed class-level references to `Context` objects to help with memory leak issues.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- IronSource SDK version 9.0.0.
+
+#### Version 9.0.0.0
+- Verified compatibility with ironSource SDK version 9.0.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.6.0.
+- IronSource SDK version 9.0.0.
+
+#### Version 8.11.1.0
+- Verified compatibility with ironSource SDK version 8.11.1.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- IronSource SDK version 8.11.1.
+
+#### Version 8.11.0.0
+- Verified compatibility with ironSource SDK version 8.11.0.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- IronSource SDK version 8.11.0.
+
 #### Version 8.10.0.0
 - Verified compatibility with ironSource SDK version 8.10.0.
 

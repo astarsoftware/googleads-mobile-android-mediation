@@ -17,22 +17,19 @@ package com.google.ads.mediation.unity;
 import static com.google.ads.mediation.unity.UnityAdsAdapterUtils.AdEvent;
 import static com.google.ads.mediation.unity.UnityAdsAdapterUtils.createAdError;
 import static com.google.ads.mediation.unity.UnityAdsAdapterUtils.createSDKError;
+import static com.google.ads.mediation.unity.UnityAdsAdapterUtils.setUnityAdsPrivacy;
 
 import android.app.Activity;
 import android.content.Context;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.View;
 import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.ads.mediation.unity.eventadapters.UnityInterstitialEventAdapter;
 import com.google.android.gms.ads.AdError;
-import com.google.android.gms.ads.AdSize;
 import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.mediation.MediationAdRequest;
-import com.google.android.gms.ads.mediation.MediationBannerAdapter;
-import com.google.android.gms.ads.mediation.MediationBannerListener;
 import com.google.android.gms.ads.mediation.MediationInterstitialAdapter;
 import com.google.android.gms.ads.mediation.MediationInterstitialListener;
 import com.unity3d.ads.IUnityAdsInitializationListener;
@@ -43,6 +40,7 @@ import com.unity3d.ads.UnityAds.UnityAdsLoadError;
 import com.unity3d.ads.UnityAds.UnityAdsShowError;
 import com.unity3d.ads.UnityAdsLoadOptions;
 import com.unity3d.ads.UnityAdsShowOptions;
+import com.unity3d.ads.metadata.MetaData;
 import java.lang.ref.WeakReference;
 import java.util.UUID;
 
@@ -51,8 +49,7 @@ import java.util.UUID;
  * Mobile Ads SDK and Unity Ads SDK.
  */
 @Keep
-public class UnityAdapter extends UnityMediationAdapter implements MediationInterstitialAdapter,
-    MediationBannerAdapter {
+public class UnityAdapter extends UnityMediationAdapter implements MediationInterstitialAdapter {
 
   /**
    * Mediation interstitial listener used to forward events to Google Mobile Ads SDK.
@@ -73,11 +70,6 @@ public class UnityAdapter extends UnityMediationAdapter implements MediationInte
    * An Android {@link Activity} weak reference used to show ads.
    */
   private WeakReference<Activity> activityWeakReference;
-
-  /**
-   * UnityBannerAd instance.
-   */
-  private UnityBannerAd bannerAd;
 
   /**
    * UnityInterstitialEventAdapter instance to send events from the mediationInterstitialListener.
@@ -159,8 +151,7 @@ public class UnityAdapter extends UnityMediationAdapter implements MediationInte
           }
         });
 
-    UnityAdsAdapterUtils.setCoppa(
-        MobileAds.getRequestConfiguration().getTagForChildDirectedTreatment(), context);
+    setUnityAdsPrivacy(MobileAds.getRequestConfiguration(), new MetaData(context));
 
     objectId = UUID.randomUUID().toString();
     UnityAdsLoadOptions unityAdsLoadOptions = new UnityAdsLoadOptions();
@@ -254,39 +245,15 @@ public class UnityAdapter extends UnityMediationAdapter implements MediationInte
   };
 
   @Override
-  public void requestBannerAd(@NonNull Context context, @NonNull MediationBannerListener listener,
-      @NonNull Bundle serverParameters, @NonNull AdSize adSize,
-      @NonNull MediationAdRequest adRequest, @Nullable Bundle mediationExtras) {
-    bannerAd = new UnityBannerAd();
-    bannerAd.requestBannerAd(context, listener, serverParameters, adSize, adRequest,
-        mediationExtras);
-  }
-
-  @Override
   public void onDestroy() {
     mediationInterstitialListener = null;
-    if (bannerAd != null) {
-      bannerAd.onDestroy();
-    }
   }
 
   @Override
   public void onPause() {
-    if (bannerAd != null) {
-      bannerAd.onPause();
-    }
   }
 
   @Override
   public void onResume() {
-    if (bannerAd != null) {
-      bannerAd.onResume();
-    }
-  }
-
-  @NonNull
-  @Override
-  public View getBannerView() {
-    return bannerAd.getBannerView();
   }
 }

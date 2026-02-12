@@ -27,8 +27,12 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import com.google.android.gms.ads.AdError;
 import com.google.android.gms.ads.RequestConfiguration;
+import com.google.android.gms.ads.mediation.MediationConfiguration;
+import com.google.android.gms.ads.mediation.rtb.RtbSignalData;
 import com.mbridge.msdk.MBridgeSDK;
 import com.mbridge.msdk.out.MBConfiguration;
+import java.util.ArrayList;
+import java.util.List;
 
 public class MintegralUtils {
 
@@ -102,8 +106,29 @@ public class MintegralUtils {
 
   protected static void configureMintegralPrivacy(Context context, MBridgeSDK mBridgeSDK) {
     int tagForChildDirected = getRequestConfiguration().getTagForChildDirectedTreatment();
-    boolean isTaggedForChildDirected =
-        tagForChildDirected == RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE;
-    mBridgeSDK.setCoppaStatus(context, isTaggedForChildDirected);
+    int tagForUnderAgeConsent = getRequestConfiguration().getTagForUnderAgeOfConsent();
+    if (tagForChildDirected == RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
+        || tagForUnderAgeConsent == RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE) {
+      mBridgeSDK.setCoppaStatus(context, true);
+    } else if (tagForChildDirected == RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE
+        || tagForUnderAgeConsent == RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_FALSE) {
+      mBridgeSDK.setCoppaStatus(context, false);
+    }
+  }
+
+  /** Get the Mintegral slot identifiers in RtbSignalData. */
+  public static List<MintegralSlotIdentifier> getMintegralSlotIdentifiers(
+      RtbSignalData rtbSignalData) {
+    List<MintegralSlotIdentifier> mintegralSlotIdentifiers = new ArrayList<>();
+    for (MediationConfiguration adConfiguration : rtbSignalData.getConfigurations()) {
+      String adUnitId =
+          adConfiguration.getServerParameters().getString(MintegralConstants.AD_UNIT_ID);
+      String placementId =
+          adConfiguration.getServerParameters().getString(MintegralConstants.PLACEMENT_ID);
+      if (!TextUtils.isEmpty(adUnitId) && !TextUtils.isEmpty(placementId)) {
+        mintegralSlotIdentifiers.add(new MintegralSlotIdentifier(adUnitId, placementId));
+      }
+    }
+    return mintegralSlotIdentifiers;
   }
 }

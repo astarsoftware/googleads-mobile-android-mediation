@@ -1,5 +1,84 @@
 ## Mintegral Android Mediation Adapter Changelog
 
+#### Version 17.0.81.0
+- Verified compatibility with Mintegral SDK 17.0.81.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- Mintegral SDK version 17.0.81.
+
+#### Version 17.0.61.1
+- Added support for forwarding the `tagForUnderAgeOfConsent` Google Mobile Ads
+SDK parameter to the Mintegral SDK.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- Mintegral SDK version 17.0.61.
+
+#### Version 17.0.61.0
+- Verified compatibility with Mintegral SDK 17.0.61.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- Mintegral SDK version 17.0.61.
+
+#### Version 17.0.51.0
+- Verified compatibility with Mintegral SDK 17.0.51.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- Mintegral SDK version 17.0.51.
+
+#### Version 17.0.41.0
+- Verified compatibility with Mintegral SDK 17.0.41.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.9.0.
+- Mintegral SDK version 17.0.41.
+
+#### Version 17.0.31.0
+- Verified compatibility with Mintegral SDK 17.0.31.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- Mintegral SDK version 17.0.31.
+
+#### Version 17.0.21.0
+- Verified compatibility with Mintegral SDK 17.0.21.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- Mintegral SDK version 17.0.21.
+
+#### Version 16.10.11.0
+- Verified compatibility with Mintegral SDK 16.10.11.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- Mintegral SDK version 16.10.11.
+
+#### Version 16.9.91.2
+- Removed class-level references to `Context` objects to help with memory leak
+  issues.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.7.0.
+- Mintegral SDK version 16.9.91.
+
+#### Version 16.9.91.1
+- Removed size check from the adapter for banner RTB ads.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- Mintegral SDK version 16.9.91.
+
+#### Version 16.9.91.0
+- Verified compatibility with Mintegral SDK 16.9.91.
+
+Built and tested with:
+- Google Mobile Ads SDK version 24.5.0.
+- Mintegral SDK version 16.9.91.
+
 #### Version 16.9.81.0
 - Verified compatibility with Mintegral SDK 16.9.81.
 

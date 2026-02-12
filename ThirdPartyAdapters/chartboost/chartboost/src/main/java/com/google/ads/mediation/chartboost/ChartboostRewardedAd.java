@@ -36,6 +36,7 @@ import com.chartboost.sdk.events.RewardEvent;
 import com.chartboost.sdk.events.ShowError;
 import com.chartboost.sdk.events.ShowEvent;
 import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.MobileAds;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
 import com.google.android.gms.ads.mediation.MediationRewardedAd;
 import com.google.android.gms.ads.mediation.MediationRewardedAdCallback;
@@ -45,21 +46,18 @@ public class ChartboostRewardedAd implements MediationRewardedAd, RewardedCallba
 
   private Rewarded chartboostRewardedAd;
 
-  private final MediationRewardedAdConfiguration rewardedAdConfiguration;
   private final MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
       mediationAdLoadCallback;
   private MediationRewardedAdCallback rewardedAdCallback;
 
   public ChartboostRewardedAd(
-      @NonNull MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
       @NonNull
           MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
               mediationAdLoadCallback) {
-    this.rewardedAdConfiguration = mediationRewardedAdConfiguration;
     this.mediationAdLoadCallback = mediationAdLoadCallback;
   }
 
-  public void loadAd() {
+  public void loadAd(MediationRewardedAdConfiguration rewardedAdConfiguration) {
     final Context context = rewardedAdConfiguration.getContext();
     Bundle serverParameters = rewardedAdConfiguration.getServerParameters();
 
@@ -77,8 +75,7 @@ public class ChartboostRewardedAd implements MediationRewardedAd, RewardedCallba
     }
 
     final String location = chartboostParams.getLocation();
-    ChartboostAdapterUtils.updateCoppaStatus(
-        context, rewardedAdConfiguration.taggedForChildDirectedTreatment());
+    ChartboostAdapterUtils.updateCoppaStatus(context, MobileAds.getRequestConfiguration());
     ChartboostInitializer.getInstance()
         .initialize(
             context,

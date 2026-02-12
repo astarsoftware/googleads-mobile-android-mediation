@@ -30,12 +30,15 @@ import com.five_corp.ad.FiveAdNative
 import com.five_corp.ad.FiveAdNativeEventListener
 import com.google.ads.mediation.line.LineMediationAdapter.Companion.SDK_ERROR_DOMAIN
 import com.google.android.gms.ads.AdError
+import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.VersionInfo
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback
 import com.google.android.gms.ads.mediation.MediationNativeAdCallback
 import com.google.android.gms.ads.mediation.MediationNativeAdConfiguration
 import com.google.android.gms.ads.mediation.NativeAdMapper
 import com.google.android.gms.ads.nativead.NativeAd
 import com.google.android.gms.ads.nativead.NativeAdOptions
+import java.lang.ref.WeakReference
 import kotlin.coroutines.CoroutineContext
 import kotlin.coroutines.resume
 import kotlinx.coroutines.CoroutineScope
@@ -50,7 +53,7 @@ import kotlinx.coroutines.suspendCancellableCoroutine
  */
 class LineNativeAd
 private constructor(
-  private val context: Context,
+  private val weakContext: WeakReference<Context>,
   private val appId: String,
   private val slotId: String?,
   private val bidResponse: String,
@@ -65,6 +68,10 @@ private constructor(
   private lateinit var nativeAd: FiveAdNative
 
   fun loadAd() {
+    val context = weakContext.get()
+    if (context == null) {
+      return
+    }
     if (slotId.isNullOrEmpty()) {
       val adError =
         AdError(
@@ -86,6 +93,10 @@ private constructor(
   }
 
   fun loadRtbAd() {
+    val context = weakContext.get()
+    if (context == null) {
+      return
+    }
     val fiveAdConfig = LineInitializer.getFiveAdConfig(appId)
     val adLoader = AdLoader.forConfig(context, fiveAdConfig) ?: return
     val bidData = BidData(bidResponse, watermark)
@@ -121,6 +132,20 @@ private constructor(
     advertiser = nativeAd.advertiserName
 
     overrideClickHandling = true
+    val gmaSdkVersion = MobileAds.getVersion()
+    // Extensive version checking is required to include NextGen versions of GMA SDK.
+    if (
+      isVersionLowerThan(
+        gmaSdkVersion,
+        VersionInfo(/* majorVersion= */ 6, /* minorVersion= */ 5, /* microVersion= */ 0),
+      ) &&
+        isVersionGreaterThanOrEqualTo(
+          gmaSdkVersion,
+          VersionInfo(/* majorVersion= */ 0, /* minorVersion= */ 18, /* microVersion= */ 0),
+        ) || (isVersionGreaterThanOrEqualTo(MobileAds.getVersion(), VersionInfo(24, 4, 0)))
+    ) {
+      overrideImpressionRecording = true
+    }
 
     val requiredImagesLoaded = loadImages()
     if (!requiredImagesLoaded) {
@@ -137,12 +162,14 @@ private constructor(
 
   private suspend fun loadImages() = suspendCancellableCoroutine { continuation ->
     nativeAd.loadIconImageAsync { image ->
-      if (image != null) {
+      val context = weakContext.get()
+      if (image != null && context != null) {
         icon = LineNativeImage(image.toDrawable(context.resources))
       }
     }
     nativeAd.loadInformationIconImageAsync { image ->
-      if (image != null) {
+      val context = weakContext.get()
+      if (image != null && context != null) {
         val informationIcon = ImageView(context)
         informationIcon.setImageBitmap(image)
         adChoicesContent = informationIcon
@@ -223,6 +250,32 @@ private constructor(
     mediationNativeAdCallback?.reportAdImpression()
   }
 
+  private fun isVersionGreaterThanOrEqualTo(version1: VersionInfo, version2: VersionInfo): Boolean {
+    if (version1.majorVersion > version2.majorVersion) {
+      return true
+    } else if (version1.majorVersion == version2.majorVersion) {
+      if (version1.minorVersion > version2.minorVersion) {
+        return true
+      } else if (version1.minorVersion == version2.minorVersion) {
+        return version1.microVersion >= version2.microVersion
+      }
+    }
+    return false
+  }
+
+  private fun isVersionLowerThan(version1: VersionInfo, version2: VersionInfo): Boolean {
+    if (version1.majorVersion < version2.majorVersion) {
+      return true
+    } else if (version1.majorVersion == version2.majorVersion) {
+      if (version1.minorVersion < version2.minorVersion) {
+        return true
+      } else if (version1.minorVersion == version2.minorVersion) {
+        return version1.microVersion < version2.microVersion
+      }
+    }
+    return false
+  }
+
   internal class LineNativeImage(private val drawable: Drawable) : NativeAd.Image() {
 
     override fun getScale(): Double = 1.0
@@ -242,7 +295,7 @@ private constructor(
       coroutineContext: CoroutineContext =
         LineSdkFactory.BACKGROUND_EXECUTOR.asCoroutineDispatcher(),
     ): Result<LineNativeAd> {
-      val context = mediationNativeAdConfiguration.context
+      val weakContext = WeakReference(mediationNativeAdConfiguration.context)
       val serverParameters = mediationNativeAdConfiguration.serverParameters
 
       val appId = serverParameters.getString(LineMediationAdapter.KEY_APP_ID)
@@ -265,7 +318,7 @@ private constructor(
 
       val instance =
         LineNativeAd(
-          context,
+          weakContext,
           appId,
           slotId,
           bidResponse,

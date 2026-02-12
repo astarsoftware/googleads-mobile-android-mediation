@@ -36,6 +36,9 @@ import com.google.android.gms.ads.AdFormat;
 import com.google.android.gms.ads.VersionInfo;
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
+import com.google.android.gms.ads.mediation.MediationAppOpenAd;
+import com.google.android.gms.ads.mediation.MediationAppOpenAdCallback;
+import com.google.android.gms.ads.mediation.MediationAppOpenAdConfiguration;
 import com.google.android.gms.ads.mediation.MediationBannerAd;
 import com.google.android.gms.ads.mediation.MediationBannerAdCallback;
 import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration;
@@ -100,9 +103,9 @@ public class AppLovinMediationAdapter extends RtbAdapter {
         ERROR_BANNER_SIZE_MISMATCH,
         ERROR_EMPTY_BID_TOKEN,
         ERROR_AD_ALREADY_REQUESTED,
-        ERROR_PRESENTATON_AD_NOT_READY,
+        ERROR_PRESENTATION_AD_NOT_READY,
         ERROR_AD_FORMAT_UNSUPPORTED,
-        ERROR_INVALID_SERVER_PARAMETERS,
+        ERROR_MISSING_SDK_KEY,
         ERROR_CHILD_USER
       })
   public @interface AdapterError {}
@@ -122,20 +125,16 @@ public class AppLovinMediationAdapter extends RtbAdapter {
    */
   public static final int ERROR_AD_ALREADY_REQUESTED = 105;
 
-  /**
-   * Ad is not ready to display.
-   */
-  public static final int ERROR_PRESENTATON_AD_NOT_READY = 106;
+  /** Ad is not ready to display. */
+  public static final int ERROR_PRESENTATION_AD_NOT_READY = 106;
 
   /**
    * Adapter does not support the ad format being requested.
    */
   public static final int ERROR_AD_FORMAT_UNSUPPORTED = 108;
 
-  /**
-   * Invalid server parameters (e.g. SDK key is null).
-   */
-  public static final int ERROR_INVALID_SERVER_PARAMETERS = 110;
+  /** Error code for missing SDK key. */
+  public static final int ERROR_MISSING_SDK_KEY = 110;
 
   /**
    * User is a child.
@@ -152,7 +151,10 @@ public class AppLovinMediationAdapter extends RtbAdapter {
    */
   public static final int ERROR_CHILD_USER = 112;
 
-  @VisibleForTesting static final String ERROR_MSG_MISSING_SDK = "Missing or invalid SDK Key.";
+  /** Error code for missing ad unit ID. */
+  public static final int ERROR_MISSING_AD_UNIT_ID = 113;
+
+  static final String ERROR_MSG_MISSING_SDK = "Missing or invalid SDK Key.";
 
   @VisibleForTesting
   static final String ERROR_MSG_BANNER_SIZE_MISMATCH =
@@ -206,8 +208,7 @@ public class AppLovinMediationAdapter extends RtbAdapter {
     }
 
     if (sdkKeys.isEmpty()) {
-      AdError error =
-          new AdError(ERROR_INVALID_SERVER_PARAMETERS, ERROR_MSG_MISSING_SDK, ERROR_DOMAIN);
+      AdError error = new AdError(ERROR_MISSING_SDK_KEY, ERROR_MSG_MISSING_SDK, ERROR_DOMAIN);
       Log.w(TAG, error.getMessage());
       initializationCompleteCallback.onInitializationFailed(error.getMessage());
       return;
@@ -288,16 +289,21 @@ public class AppLovinMediationAdapter extends RtbAdapter {
       return;
     }
 
-    final MediationConfiguration config = rtbSignalData.getConfiguration();
+    final List<MediationConfiguration> configs = rtbSignalData.getConfigurations();
 
-    // Check if supported ad format
-    if (config.getFormat() == AdFormat.NATIVE) {
-      AdError error = new AdError(ERROR_AD_FORMAT_UNSUPPORTED,
-          "Requested to collect signal for unsupported native ad format. Ignoring...",
-          ERROR_DOMAIN);
-      Log.e(TAG, error.getMessage());
-      signalCallbacks.onFailure(error);
-      return;
+    if (!configs.isEmpty()) {
+      // Check if supported ad format. Note: Even if there are multiple configs, they will all have
+      // the same format. So, just checking the first one works.
+      if (configs.get(0).getFormat() == AdFormat.NATIVE) {
+        AdError error =
+            new AdError(
+                ERROR_AD_FORMAT_UNSUPPORTED,
+                "Requested to collect signal for unsupported native ad format. Ignoring...",
+                ERROR_DOMAIN);
+        Log.e(TAG, error.getMessage());
+        signalCallbacks.onFailure(error);
+        return;
+      }
     }
 
     // Check if the publisher provided extra parameters
@@ -318,6 +324,20 @@ public class AppLovinMediationAdapter extends RtbAdapter {
   }
 
   @Override
+  public void loadAppOpenAd(
+      @NonNull MediationAppOpenAdConfiguration mediationAppOpenAdConfiguration,
+      @NonNull MediationAdLoadCallback<MediationAppOpenAd, MediationAppOpenAdCallback> callback) {
+    if (isChildUser()) {
+      callback.onFailure(getChildUserError());
+      return;
+    }
+
+    AppLovinWaterfallAppOpenAd appOpenAd =
+        new AppLovinWaterfallAppOpenAd(callback, appLovinInitializer, appLovinAdFactory);
+    appOpenAd.loadAd(mediationAppOpenAdConfiguration);
+  }
+
+  @Override
   public void loadBannerAd(
       @NonNull MediationBannerAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback) {
@@ -328,8 +348,8 @@ public class AppLovinMediationAdapter extends RtbAdapter {
 
     bannerAd =
         AppLovinBannerAd.newInstance(
-            adConfiguration, callback, appLovinInitializer, appLovinAdFactory);
-    bannerAd.loadAd();
+            callback, appLovinInitializer, appLovinAdFactory);
+    bannerAd.loadAd(adConfiguration);
   }
 
   @Override
@@ -345,8 +365,8 @@ public class AppLovinMediationAdapter extends RtbAdapter {
 
     waterfallInterstitialAd =
         new AppLovinWaterfallInterstitialAd(
-            adConfiguration, callback, appLovinInitializer, appLovinAdFactory);
-    waterfallInterstitialAd.loadAd();
+            callback, appLovinInitializer, appLovinAdFactory);
+    waterfallInterstitialAd.loadAd(adConfiguration);
   }
 
   @Override
@@ -362,8 +382,8 @@ public class AppLovinMediationAdapter extends RtbAdapter {
 
     rtbInterstitialRenderer =
         new AppLovinRtbInterstitialRenderer(
-            adConfiguration, callback, appLovinInitializer, appLovinAdFactory);
-    rtbInterstitialRenderer.loadAd();
+            callback, appLovinInitializer, appLovinAdFactory);
+    rtbInterstitialRenderer.loadAd(adConfiguration);
   }
 
   @Override
@@ -375,8 +395,8 @@ public class AppLovinMediationAdapter extends RtbAdapter {
     }
 
     rewardedRenderer =
-        new AppLovinWaterfallRewardedRenderer(adConfiguration, callback, appLovinInitializer, appLovinAdFactory, appLovinSdkUtilsWrapper);
-    rewardedRenderer.loadAd();
+        new AppLovinWaterfallRewardedRenderer(callback, appLovinInitializer, appLovinAdFactory, appLovinSdkUtilsWrapper);
+    rewardedRenderer.loadAd(adConfiguration);
   }
 
   @Override
@@ -388,7 +408,7 @@ public class AppLovinMediationAdapter extends RtbAdapter {
     }
 
     rtbRewardedRenderer =
-        new AppLovinRtbRewardedRenderer(adConfiguration, callback, appLovinInitializer, appLovinAdFactory, appLovinSdkUtilsWrapper);
-    rtbRewardedRenderer.loadAd();
+        new AppLovinRtbRewardedRenderer(callback, appLovinInitializer, appLovinAdFactory, appLovinSdkUtilsWrapper);
+    rtbRewardedRenderer.loadAd(adConfiguration);
   }
 }

@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Bundle
 import android.util.Log
 import com.google.ads.mediation.vungle.VungleConstants
+import com.google.ads.mediation.vungle.VungleConstants.KEY_BACK_BUTTON_IMMEDIATELY_ENABLED
 import com.google.ads.mediation.vungle.VungleFactory
 import com.google.ads.mediation.vungle.VungleInitializer
 import com.google.ads.mediation.vungle.VungleInitializer.VungleInitializationListener
@@ -25,7 +26,6 @@ import com.vungle.ads.VungleError
 
 /** Abstract class with app-open adapter logic common for both waterfall and RTB integrations. */
 abstract class VungleAppOpenAd(
-  private val mediationAppOpenAdConfiguration: MediationAppOpenAdConfiguration,
   private val mediationAdLoadCallback:
     MediationAdLoadCallback<MediationAppOpenAd, MediationAppOpenAdCallback>,
   private val vungleFactory: VungleFactory,
@@ -40,7 +40,7 @@ abstract class VungleAppOpenAd(
   private var mediationAppOpenAdCallback: MediationAppOpenAdCallback? = null
 
   /** Loads an app open ad. */
-  fun render() {
+  fun render(mediationAppOpenAdConfiguration: MediationAppOpenAdConfiguration) {
     val mediationExtras: Bundle = mediationAppOpenAdConfiguration.mediationExtras
     val serverParameters: Bundle = mediationAppOpenAdConfiguration.serverParameters
 
@@ -87,6 +87,11 @@ abstract class VungleAppOpenAd(
             if (mediationExtras.containsKey(VungleConstants.KEY_ORIENTATION)) {
               adConfig.adOrientation =
                 mediationExtras.getInt(VungleConstants.KEY_ORIENTATION, AdConfig.AUTO_ROTATE)
+            }
+            if (mediationExtras.containsKey(KEY_BACK_BUTTON_IMMEDIATELY_ENABLED)) {
+              adConfig.setBackButtonImmediatelyEnabled(
+                mediationExtras.getBoolean(KEY_BACK_BUTTON_IMMEDIATELY_ENABLED, false)
+              )
             }
             maybeAddWatermarkToVungleAdConfig(adConfig, mediationAppOpenAdConfiguration)
             // Note: Safe to access placement here since we do a null-check for placement earlier in

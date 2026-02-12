@@ -26,15 +26,14 @@ import com.google.android.gms.ads.mediation.MediationBannerAdConfiguration
  * DTExchange SDK.
  */
 class DTExchangeBannerAd(
-  private val mediationBannerAdConfiguration: MediationBannerAdConfiguration,
   private val mediationAdLoadCallback:
-    MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>,
+    MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback>
 ) : MediationBannerAd, InneractiveAdSpot.RequestListener, InneractiveAdViewEventsListenerWithImpressionData {
   private lateinit var adSpot: InneractiveAdSpot
   private lateinit var wrapperView: RelativeLayout
   private var bannerAdCallback: MediationBannerAdCallback? = null
 
-  fun loadAd() {
+  fun loadAd(mediationBannerAdConfiguration: MediationBannerAdConfiguration) {
     InneractiveAdManager.setMediationName(FyberMediationAdapter.MEDIATOR_NAME)
     InneractiveAdManager.setMediationVersion(MobileAds.getVersion().toString())
 
@@ -42,7 +41,15 @@ class DTExchangeBannerAd(
     adSpot = InneractiveAdSpotManager.get().createSpot()
     val controller = InneractiveAdViewUnitController()
     adSpot.addUnitController(controller)
-    wrapperView = RelativeLayout(mediationBannerAdConfiguration.context)
+    val pubRequestedSize = mediationBannerAdConfiguration.adSize
+    val context = mediationBannerAdConfiguration.context
+    val wrapperViewLayoutParams =
+      RelativeLayout.LayoutParams(
+        pubRequestedSize.getWidthInPixels(context),
+        pubRequestedSize.getHeightInPixels(context),
+      )
+    wrapperView = RelativeLayout(context)
+    wrapperView.layoutParams = wrapperViewLayoutParams
     adSpot.setRequestListener(this)
     controller.eventsListener = this
     FyberAdapterUtils.updateFyberExtraParams(mediationBannerAdConfiguration.mediationExtras)

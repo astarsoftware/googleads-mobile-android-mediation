@@ -31,18 +31,22 @@ import com.google.ads.mediation.adaptertestkit.assertGetVersionInfo
 import com.google.ads.mediation.adaptertestkit.createMediationBannerAdConfiguration
 import com.google.ads.mediation.adaptertestkit.createMediationConfiguration
 import com.google.ads.mediation.adaptertestkit.createMediationInterstitialAdConfiguration
+import com.google.ads.mediation.adaptertestkit.createMediationNativeAdConfiguration
 import com.google.ads.mediation.adaptertestkit.createMediationRewardedAdConfiguration
 import com.google.android.gms.ads.AdError
 import com.google.android.gms.ads.AdFormat
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.RequestConfiguration
 import com.google.android.gms.ads.mediation.InitializationCompleteCallback
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback
 import com.google.android.gms.ads.mediation.MediationBannerAd
 import com.google.android.gms.ads.mediation.MediationBannerAdCallback
 import com.google.android.gms.ads.mediation.MediationInterstitialAd
 import com.google.android.gms.ads.mediation.MediationInterstitialAdCallback
+import com.google.android.gms.ads.mediation.MediationNativeAdCallback
 import com.google.android.gms.ads.mediation.MediationRewardedAd
 import com.google.android.gms.ads.mediation.MediationRewardedAdCallback
+import com.google.android.gms.ads.mediation.NativeAdMapper
 import com.google.android.gms.ads.mediation.rtb.RtbSignalData
 import com.google.android.gms.ads.mediation.rtb.SignalCallbacks
 import org.junit.After
@@ -85,6 +89,9 @@ class FyberMediationAdapterTest {
   private val mockRewardedAdLoadCallback:
     MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback> =
     mock()
+  private val mockNativeAdLoadCallback:
+    MediationAdLoadCallback<NativeAdMapper, MediationNativeAdCallback> =
+    mock()
   private val mockSdkWrapper: SdkWrapper = mock { on { isInitialized() } doReturn false }
 
   private val activity = Robolectric.buildActivity(Activity::class.java).get()
@@ -92,6 +99,14 @@ class FyberMediationAdapterTest {
   // region Setup
   @Before
   fun setUp() {
+    val requestConfiguration =
+      RequestConfiguration.Builder()
+        .setTagForChildDirectedTreatment(
+          RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_UNSPECIFIED
+        )
+        .setTagForUnderAgeOfConsent(RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_UNSPECIFIED)
+        .build()
+    MobileAds.setRequestConfiguration(requestConfiguration)
     adapter = FyberMediationAdapter()
     mockInneractiveAdManager = mockStatic(InneractiveAdManager::class.java)
     FyberSdkWrapper.delegate = mockSdkWrapper
@@ -155,6 +170,11 @@ class FyberMediationAdapterTest {
   // region Initialization Tests
   @Test
   fun initialize_initializesInneractiveAdManager() {
+    val requestConfiguration =
+      RequestConfiguration.Builder()
+        .setTagForChildDirectedTreatment(RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE)
+        .build()
+    MobileAds.setRequestConfiguration(requestConfiguration)
     val initializationParameters = createMediationConfiguration(AdFormat.BANNER, serverParameters)
     adapter.initialize(
       activity,
@@ -163,6 +183,7 @@ class FyberMediationAdapterTest {
     )
 
     mockInneractiveAdManager.verify {
+      InneractiveAdManager.currentAudienceAppliesToCoppa()
       InneractiveAdManager.initialize(eq(activity), eq(AdapterTestKitConstants.TEST_APP_ID), any())
     }
   }
@@ -177,6 +198,10 @@ class FyberMediationAdapterTest {
       listOf(initializationParameters),
     )
 
+    mockInneractiveAdManager.verify(
+      { InneractiveAdManager.currentAudienceAppliesToCoppa() },
+      never(),
+    )
     mockInneractiveAdManager.verify {
       InneractiveAdManager.initialize(
         eq(activity),
@@ -244,6 +269,11 @@ class FyberMediationAdapterTest {
 
   @Test
   fun initialize_withMultipleAppIds_initializesOnlyOnceAndInvokesOnInitializationSucceeded() {
+    val requestConfiguration =
+      RequestConfiguration.Builder()
+        .setTagForUnderAgeOfConsent(RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE)
+        .build()
+    MobileAds.setRequestConfiguration(requestConfiguration)
     val serverParameters1 = bundleOf(FyberMediationAdapter.KEY_APP_ID to TEST_APP_ID_1)
     val serverParameters2 = bundleOf(FyberMediationAdapter.KEY_APP_ID to TEST_APP_ID_2)
     val initializationParameters1 = createMediationConfiguration(AdFormat.BANNER, serverParameters1)
@@ -256,12 +286,13 @@ class FyberMediationAdapterTest {
       listOf(initializationParameters1, initializationParameters2),
     )
 
+    mockInneractiveAdManager.verify() { InneractiveAdManager.currentAudienceAppliesToCoppa() }
     mockInneractiveAdManager.verify(
       { InneractiveAdManager.initialize(eq(activity), eq(TEST_APP_ID_2), listener.capture()) },
       times(1),
     )
     mockInneractiveAdManager.verify(
-      { InneractiveAdManager.initialize(eq(activity), eq(TEST_APP_ID_1), listener.capture()) },
+      { InneractiveAdManager.initialize(eq(activity), eq(TEST_APP_ID_1), any()) },
       never(),
     )
 
@@ -440,6 +471,29 @@ class FyberMediationAdapterTest {
       whenever(InneractiveAdSpotManager.get()) doReturn mockInneractiveAdSpotManager
 
       adapter.loadRtbRewardedAd(rewardedAdParameters, mockRewardedAdLoadCallback)
+
+      mockInneractiveAdManager.verify {
+        InneractiveAdManager.setMediationName(eq(FyberMediationAdapter.MEDIATOR_NAME))
+        InneractiveAdManager.setMediationVersion(eq(MobileAds.getVersion().toString()))
+      }
+      verify(mockAdSpot).loadAd(eq(TEST_BID_RESPONSE))
+    }
+  }
+
+  // endregion
+
+  // region Native Ad Load Tests
+  @Test
+  fun loadRtbNativeAdMapper_invokesLoadAd() {
+    mockStatic(InneractiveAdSpotManager::class.java).use {
+      val nativeAdParameters =
+        createMediationNativeAdConfiguration(context = activity, bidResponse = TEST_BID_RESPONSE)
+      val mockAdSpot = mock<InneractiveAdSpot>()
+      val mockInneractiveAdSpotManager =
+        mock<InneractiveAdSpotManager> { on { createSpot() } doReturn mockAdSpot }
+      whenever(InneractiveAdSpotManager.get()) doReturn mockInneractiveAdSpotManager
+
+      adapter.loadRtbNativeAdMapper(nativeAdParameters, mockNativeAdLoadCallback)
 
       mockInneractiveAdManager.verify {
         InneractiveAdManager.setMediationName(eq(FyberMediationAdapter.MEDIATOR_NAME))

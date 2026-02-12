@@ -36,6 +36,7 @@ import com.google.ads.mediation.vungle.VungleFactory;
 import com.google.ads.mediation.vungle.VungleInitializer;
 import com.google.ads.mediation.vungle.VungleMediationAdapter;
 import com.google.android.gms.ads.AdError;
+import com.google.android.gms.ads.VideoOptions;
 import com.google.android.gms.ads.formats.NativeAd.Image;
 import com.google.android.gms.ads.mediation.MediationAdLoadCallback;
 import com.google.android.gms.ads.mediation.MediationNativeAdCallback;
@@ -48,6 +49,8 @@ import com.vungle.ads.NativeAd;
 import com.vungle.ads.NativeAdListener;
 import com.vungle.ads.VungleError;
 import com.vungle.ads.internal.ui.view.MediaView;
+import com.vungle.ads.nativead.NativeVideoListener;
+import com.vungle.ads.nativead.NativeVideoOptions;
 import java.util.ArrayList;
 import java.util.Map;
 
@@ -59,7 +62,6 @@ import java.util.Map;
  */
 public class VungleRtbNativeAd extends UnifiedNativeAdMapper implements NativeAdListener {
 
-  private final MediationNativeAdConfiguration adConfiguration;
   private final MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback>
       adLoadCallback;
   private MediationNativeAdCallback nativeAdCallback;
@@ -71,17 +73,16 @@ public class VungleRtbNativeAd extends UnifiedNativeAdMapper implements NativeAd
   private final VungleFactory vungleFactory;
 
   public VungleRtbNativeAd(
-      @NonNull MediationNativeAdConfiguration mediationNativeAdConfiguration,
       @NonNull MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback> callback,
       VungleFactory vungleFactory) {
-    this.adConfiguration = mediationNativeAdConfiguration;
     this.adLoadCallback = callback;
     this.vungleFactory = vungleFactory;
   }
 
-  public void render() {
+  public void render(@NonNull MediationNativeAdConfiguration adConfiguration) {
     Bundle serverParameters = adConfiguration.getServerParameters();
     NativeAdOptions nativeAdOptions = adConfiguration.getNativeAdOptions();
+    VideoOptions googleVideoOptions = nativeAdOptions.getVideoOptions();
     final Context context = adConfiguration.getContext();
 
     String appID = serverParameters.getString(KEY_APP_ID);
@@ -138,6 +139,11 @@ public class VungleRtbNativeAd extends UnifiedNativeAdMapper implements NativeAd
                 nativeAd = vungleFactory.createNativeAd(context, placementId);
                 nativeAd.setAdOptionsPosition(adOptionsPosition);
                 nativeAd.setAdListener(VungleRtbNativeAd.this);
+                if (googleVideoOptions != null) {
+                  NativeVideoOptions vngVideoOptions = nativeAd.getVideoOptions();
+                  boolean startMuted = googleVideoOptions.getStartMuted();
+                  vngVideoOptions.setStartMuted(startMuted);
+                }
                 mediaView = new MediaView(context);
                 if (!TextUtils.isEmpty(watermark)) {
                   nativeAd.getAdConfig().setWatermark(watermark);
@@ -215,7 +221,7 @@ public class VungleRtbNativeAd extends UnifiedNativeAdMapper implements NativeAd
 
     ViewGroup adView = (ViewGroup) view;
 
-    if (nativeAd == null || !nativeAd.canPlayAd()) {
+    if (nativeAd == null) {
       return;
     }
 
@@ -233,6 +239,9 @@ public class VungleRtbNativeAd extends UnifiedNativeAdMapper implements NativeAd
 
       if (clickableAssets.getKey().equals(NativeAdAssetNames.ASSET_ICON)) {
         iconView = clickableAssets.getValue();
+      } else if (clickableAssets.getKey().equals(NativeAdAssetNames.ASSET_MEDIA_VIDEO)) {
+        // enable liftoff mediaView clickable if Google MediaView click is enabled.
+        assetViews.add(mediaView);
       }
     }
 
@@ -267,12 +276,41 @@ public class VungleRtbNativeAd extends UnifiedNativeAdMapper implements NativeAd
       setStarRating(starRating);
     }
     setAdvertiser(nativeAd.getAdSponsoredText());
+    setHasVideoContent(nativeAd.hasVideoContent());
     setMediaView(mediaView);
+    mediaView.setNativeVideoListener(new NativeVideoListener() {
+      @Override
+      public void onVideoPlay() {
+        nativeAdCallback.onVideoPlay();
+      }
+
+      @Override
+      public void onVideoPause() {
+        nativeAdCallback.onVideoPause();
+      }
+
+      @Override
+      public void onVideoEnd() {
+        nativeAdCallback.onVideoComplete();
+      }
+
+      @Override
+      public void onVideoMute() {
+        nativeAdCallback.onVideoMute();
+      }
+
+      @Override
+      public void onVideoUnmute() {
+        nativeAdCallback.onVideoUnmute();
+      }
+    });
 
     String iconUrl = nativeAd.getAppIcon();
     if (!TextUtils.isEmpty(iconUrl) && iconUrl.startsWith("file://")) {
       setIcon(new VungleNativeMappedImage(Uri.parse(iconUrl)));
     }
+
+    setMediaContentAspectRatio(nativeAd.getMediaAspectRatio());
 
     if (runtimeGmaSdkListensToAdapterReportedImpressions()) {
       setOverrideImpressionRecording(true);

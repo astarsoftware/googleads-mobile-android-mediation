@@ -9,8 +9,10 @@ import com.inmobi.sdk.InMobiSdk
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
+import org.mockito.kotlin.any
 import org.mockito.kotlin.doReturn
 import org.mockito.kotlin.mock
+import org.mockito.kotlin.never
 import org.mockito.kotlin.verify
 import org.mockito.kotlin.whenever
 
@@ -56,8 +58,22 @@ class InMobiAdapterUtilsTest {
   @Test
   fun setIsAgeRestricted_whenCOPPASet_setsAgeRestrictedTrueOnInMobiSDK() {
     val inMobiSdkWrapper = mock<InMobiSdkWrapper>()
-    setCOPPAOnMobileAdsRequestConfiguration(
-      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE
+    setCOPPAAndUnderAgeOnMobileAdsRequestConfiguration(
+      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_TRUE,
+      RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_UNSPECIFIED,
+    )
+
+    InMobiAdapterUtils.setIsAgeRestricted(inMobiSdkWrapper)
+
+    verify(inMobiSdkWrapper).setIsAgeRestricted(true)
+  }
+
+  @Test
+  fun setIsAgeRestricted_whenUnderAgeConsentSet_setsAgeRestrictedTrueOnInMobiSDK() {
+    val inMobiSdkWrapper = mock<InMobiSdkWrapper>()
+    setCOPPAAndUnderAgeOnMobileAdsRequestConfiguration(
+      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_UNSPECIFIED,
+      RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_TRUE,
     )
 
     InMobiAdapterUtils.setIsAgeRestricted(inMobiSdkWrapper)
@@ -68,8 +84,9 @@ class InMobiAdapterUtilsTest {
   @Test
   fun setIsAgeRestricted_whenCOPPANotSet_setsAgeRestrictedFalseOnInMobiSDK() {
     val inMobiSdkWrapper = mock<InMobiSdkWrapper>()
-    setCOPPAOnMobileAdsRequestConfiguration(
-      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE
+    setCOPPAAndUnderAgeOnMobileAdsRequestConfiguration(
+      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_FALSE,
+      RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_UNSPECIFIED,
     )
 
     InMobiAdapterUtils.setIsAgeRestricted(inMobiSdkWrapper)
@@ -78,50 +95,64 @@ class InMobiAdapterUtilsTest {
   }
 
   @Test
-  fun setIsAgeRestricted_whenCOPPANotSpecified_setsAgeRestrictedFalseOnInMobiSDK() {
+  fun setIsAgeRestricted_whenUnderAgeConsentNotSet_setsAgeRestrictedFalseOnInMobiSDK() {
     val inMobiSdkWrapper = mock<InMobiSdkWrapper>()
-    setCOPPAOnMobileAdsRequestConfiguration(
-      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_UNSPECIFIED
+    setCOPPAAndUnderAgeOnMobileAdsRequestConfiguration(
+      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_UNSPECIFIED,
+      RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_FALSE,
     )
 
     InMobiAdapterUtils.setIsAgeRestricted(inMobiSdkWrapper)
 
     verify(inMobiSdkWrapper).setIsAgeRestricted(false)
+  }
+
+  @Test
+  fun setIsAgeRestricted_whenCOPPANotSpecified_setIsAgeRestrictedIsNeverInvoked() {
+    val inMobiSdkWrapper = mock<InMobiSdkWrapper>()
+    setCOPPAAndUnderAgeOnMobileAdsRequestConfiguration(
+      RequestConfiguration.TAG_FOR_CHILD_DIRECTED_TREATMENT_UNSPECIFIED,
+      RequestConfiguration.TAG_FOR_UNDER_AGE_OF_CONSENT_UNSPECIFIED,
+    )
+
+    InMobiAdapterUtils.setIsAgeRestricted(inMobiSdkWrapper)
+
+    verify(inMobiSdkWrapper, never()).setIsAgeRestricted(any())
   }
 
   @Test
   fun getAgeGroup_returnsCorrectAgeGroup() {
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.BELOW_18,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BELOW_18
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BELOW_18,
     )
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.ABOVE_65,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.ABOVE_65
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.ABOVE_65,
     )
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.BETWEEN_18_AND_24,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_18_AND_24
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_18_AND_24,
     )
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.BETWEEN_25_AND_29,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_25_AND_29
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_25_AND_29,
     )
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.BETWEEN_30_AND_34,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_30_AND_34
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_30_AND_34,
     )
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.BETWEEN_35_AND_44,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_35_AND_44
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_35_AND_44,
     )
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.BETWEEN_45_AND_54,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_45_AND_54
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_45_AND_54,
     )
     invokeAndAssertGetAgeGroup(
       /* value= */ InMobiNetworkValues.BETWEEN_55_AND_65,
-      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_55_AND_65
+      /* expectedAgeGroup= */ InMobiSdk.AgeGroup.BETWEEN_55_AND_65,
     )
   }
 
@@ -142,15 +173,15 @@ class InMobiAdapterUtilsTest {
   fun getEducation_returnsCorrectEducation() {
     invokeAndAssertGetEducation(
       /* value= */ InMobiNetworkValues.EDUCATION_COLLEGEORGRADUATE,
-      /* expectedEducation= */ InMobiSdk.Education.COLLEGE_OR_GRADUATE
+      /* expectedEducation= */ InMobiSdk.Education.COLLEGE_OR_GRADUATE,
     )
     invokeAndAssertGetEducation(
       /* value= */ InMobiNetworkValues.EDUCATION_HIGHSCHOOLORLESS,
-      /* expectedEducation= */ InMobiSdk.Education.HIGH_SCHOOL_OR_LESS
+      /* expectedEducation= */ InMobiSdk.Education.HIGH_SCHOOL_OR_LESS,
     )
     invokeAndAssertGetEducation(
       /* value= */ InMobiNetworkValues.EDUCATION_POSTGRADUATEORABOVE,
-      /* expectedEducation= */ InMobiSdk.Education.POST_GRADUATE_OR_ABOVE
+      /* expectedEducation= */ InMobiSdk.Education.POST_GRADUATE_OR_ABOVE,
     )
   }
 
@@ -171,11 +202,11 @@ class InMobiAdapterUtilsTest {
   fun getLogLevel_returnsCorrectLogLevel() {
     invokeAndAssertGetLogLevel(
       /* value= */ InMobiNetworkValues.LOGLEVEL_DEBUG,
-      /* expectedLogLevel= */ InMobiSdk.LogLevel.DEBUG
+      /* expectedLogLevel= */ InMobiSdk.LogLevel.DEBUG,
     )
     invokeAndAssertGetLogLevel(
       /* value= */ InMobiNetworkValues.LOGLEVEL_ERROR,
-      InMobiSdk.LogLevel.ERROR
+      InMobiSdk.LogLevel.ERROR,
     )
   }
 
@@ -193,46 +224,6 @@ class InMobiAdapterUtilsTest {
   }
 
   @Test
-  fun isValidNativeAd_nullCtaText_returnsFalse() {
-    whenever(inMobiNativeWrapper.adCtaText).thenReturn(/* value= */ null)
-
-    assertThat(InMobiAdapterUtils.isValidNativeAd(inMobiNativeWrapper)).isFalse()
-  }
-
-  @Test
-  fun isValidNativeAd_nullAdDescription_returnsFalse() {
-    whenever(inMobiNativeWrapper.adDescription).thenReturn(/* value= */ null)
-
-    assertThat(InMobiAdapterUtils.isValidNativeAd(inMobiNativeWrapper)).isFalse()
-  }
-
-  @Test
-  fun isValidNativeAd_nullAdIconUrl_returnsFalse() {
-    whenever(inMobiNativeWrapper.adIconUrl).thenReturn(/* value= */ null)
-
-    assertThat(InMobiAdapterUtils.isValidNativeAd(inMobiNativeWrapper)).isFalse()
-  }
-
-  @Test
-  fun isValidNativeAd_nullAdLandingPageUrl_returnsFalse() {
-    whenever(inMobiNativeWrapper.adLandingPageUrl).thenReturn(/* value= */ null)
-
-    assertThat(InMobiAdapterUtils.isValidNativeAd(inMobiNativeWrapper)).isFalse()
-  }
-
-  @Test
-  fun isValidNativeAd_nullAdTitle_returnsFalse() {
-    whenever(inMobiNativeWrapper.adTitle).thenReturn(/* value= */ null)
-
-    assertThat(InMobiAdapterUtils.isValidNativeAd(inMobiNativeWrapper)).isFalse()
-  }
-
-  @Test
-  fun isValidNativeAd_hasAllRequiredAssets_returnsTrue() {
-    assertThat(InMobiAdapterUtils.isValidNativeAd(inMobiNativeWrapper)).isTrue()
-  }
-
-  @Test
   fun validateInMobiAdLoadParams_emptyAccountID_returnsAdError() {
     val adError =
       InMobiAdapterUtils.validateInMobiAdLoadParams(/* accountID= */ "", /* placementID= */ 12345L)
@@ -247,7 +238,7 @@ class InMobiAdapterUtilsTest {
     val adError =
       InMobiAdapterUtils.validateInMobiAdLoadParams(
         /* accountID= */ null,
-        /* placementID= */ 12345L
+        /* placementID= */ 12345L,
       )
 
     assertThat(adError).isNotNull()
@@ -260,7 +251,7 @@ class InMobiAdapterUtilsTest {
     val adError =
       InMobiAdapterUtils.validateInMobiAdLoadParams(
         /* accountID= */ "1234567890",
-        /* placementID= */ -12345L
+        /* placementID= */ -12345L,
       )
 
     assertThat(adError).isNotNull()
@@ -273,15 +264,19 @@ class InMobiAdapterUtilsTest {
     val adError =
       InMobiAdapterUtils.validateInMobiAdLoadParams(
         /* accountID= */ "1234567890",
-        /* placementID= */ 12345L
+        /* placementID= */ 12345L,
       )
 
     assertThat(adError).isNull()
   }
 
-  private fun setCOPPAOnMobileAdsRequestConfiguration(value: Int) {
+  private fun setCOPPAAndUnderAgeOnMobileAdsRequestConfiguration(coppa: Int, underAgeConsent: Int) {
     val requestConfiguration =
-      MobileAds.getRequestConfiguration().toBuilder().setTagForChildDirectedTreatment(value).build()
+      MobileAds.getRequestConfiguration()
+        .toBuilder()
+        .setTagForChildDirectedTreatment(coppa)
+        .setTagForUnderAgeOfConsent(underAgeConsent)
+        .build()
     MobileAds.setRequestConfiguration(requestConfiguration)
   }
 
@@ -289,8 +284,6 @@ class InMobiAdapterUtilsTest {
     whenever(inMobiNativeWrapper.adCtaText) doReturn ("SomeCtaText")
     whenever(inMobiNativeWrapper.adDescription) doReturn ("AdDescription")
     whenever(inMobiNativeWrapper.adIconUrl) doReturn ("http://www.example.com/docs/resource1.html")
-    whenever(inMobiNativeWrapper.adLandingPageUrl) doReturn
-      ("http://www.landing.com/docs/resource1.html")
     whenever(inMobiNativeWrapper.adTitle) doReturn ("adTitle")
   }
 }

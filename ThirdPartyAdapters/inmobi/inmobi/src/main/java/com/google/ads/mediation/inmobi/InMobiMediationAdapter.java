@@ -50,7 +50,6 @@ import com.google.android.gms.ads.mediation.UnifiedNativeAdMapper;
 import com.google.android.gms.ads.mediation.rtb.RtbAdapter;
 import com.google.android.gms.ads.mediation.rtb.RtbSignalData;
 import com.google.android.gms.ads.mediation.rtb.SignalCallbacks;
-import com.inmobi.sdk.InMobiSdk;
 import java.util.HashSet;
 import java.util.List;
 
@@ -66,6 +65,10 @@ public class InMobiMediationAdapter extends RtbAdapter {
           + " Manager UI";
 
   public static final String TAG = InMobiMediationAdapter.class.getSimpleName();
+
+  private InMobiWaterfallRewardedAd inMobiWaterfallRewardedInterstitialAd;
+
+  private InMobiRtbRewardedAd inMobiRtbRewardedInterstitialAd;
 
   private InMobiWaterfallRewardedAd inMobiWaterfallRewardedAd;
 
@@ -217,9 +220,8 @@ public class InMobiMediationAdapter extends RtbAdapter {
   public void loadRtbBannerAd(
       @NonNull MediationBannerAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback) {
-    inMobiRtbBannerAd =
-        new InMobiRtbBannerAd(adConfiguration, callback, inMobiInitializer, inMobiAdFactory);
-    inMobiRtbBannerAd.loadAd();
+    inMobiRtbBannerAd = new InMobiRtbBannerAd(callback, inMobiInitializer, inMobiAdFactory);
+    inMobiRtbBannerAd.loadAd(adConfiguration);
   }
 
   @Override
@@ -229,17 +231,25 @@ public class InMobiMediationAdapter extends RtbAdapter {
           MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
               callback) {
     inMobiRtbInterstitialAd =
-        new InMobiRtbInterstitialAd(adConfiguration, callback, inMobiInitializer, inMobiAdFactory);
-    inMobiRtbInterstitialAd.loadAd();
+        new InMobiRtbInterstitialAd(callback, inMobiInitializer, inMobiAdFactory);
+    inMobiRtbInterstitialAd.loadAd(adConfiguration);
   }
 
   @Override
   public void loadRtbRewardedAd(
       @NonNull MediationRewardedAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback> callback) {
-    inMobiRtbRewardedAd =
-        new InMobiRtbRewardedAd(adConfiguration, callback, inMobiInitializer, inMobiAdFactory);
-    inMobiRtbRewardedAd.loadAd();
+    inMobiRtbRewardedAd = new InMobiRtbRewardedAd(callback, inMobiInitializer, inMobiAdFactory);
+    inMobiRtbRewardedAd.loadAd(adConfiguration);
+  }
+
+  @Override
+  public void loadRtbRewardedInterstitialAd(
+      @NonNull MediationRewardedAdConfiguration adConfiguration,
+      @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback> callback) {
+    inMobiRtbRewardedInterstitialAd =
+        new InMobiRtbRewardedAd(callback, inMobiInitializer, inMobiAdFactory);
+    inMobiRtbRewardedInterstitialAd.loadAd(adConfiguration);
   }
 
   @Override
@@ -253,43 +263,50 @@ public class InMobiMediationAdapter extends RtbAdapter {
 
   @Override
   public void loadRewardedAd(
-      @NonNull MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
-      final @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback> mediationAdLoadCallback) {
+      @NonNull MediationRewardedAdConfiguration adConfiguration,
+      final @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
+              mediationAdLoadCallback) {
     inMobiWaterfallRewardedAd =
-        new InMobiWaterfallRewardedAd(
-            mediationRewardedAdConfiguration,
-            mediationAdLoadCallback,
-            inMobiInitializer,
-            inMobiAdFactory);
-    inMobiWaterfallRewardedAd.loadAd();
+        new InMobiWaterfallRewardedAd(mediationAdLoadCallback, inMobiInitializer, inMobiAdFactory);
+    inMobiWaterfallRewardedAd.loadAd(adConfiguration);
+  }
+
+  @Override
+  public void loadRewardedInterstitialAd(
+      @NonNull MediationRewardedAdConfiguration mediationRewardedAdConfiguration,
+      final @NonNull MediationAdLoadCallback<MediationRewardedAd, MediationRewardedAdCallback>
+              mediationAdLoadCallback) {
+    inMobiWaterfallRewardedInterstitialAd =
+        new InMobiWaterfallRewardedAd(mediationAdLoadCallback, inMobiInitializer, inMobiAdFactory);
+    inMobiWaterfallRewardedInterstitialAd.loadAd(mediationRewardedAdConfiguration);
   }
 
   @Override
   public void loadBannerAd(
-      @NonNull MediationBannerAdConfiguration mediationBannerAdConfiguration,
+      @NonNull MediationBannerAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<MediationBannerAd, MediationBannerAdCallback> callback) {
     inMobiWaterfallBannerAd =
-        new InMobiWaterfallBannerAd(
-            mediationBannerAdConfiguration, callback, inMobiInitializer, inMobiAdFactory);
-    inMobiWaterfallBannerAd.loadAd();
+        new InMobiWaterfallBannerAd(callback, inMobiInitializer, inMobiAdFactory);
+    inMobiWaterfallBannerAd.loadAd(adConfiguration);
   }
 
   @Override
   public void loadInterstitialAd(
-      @NonNull MediationInterstitialAdConfiguration mediationInterstitialAdConfiguration,
-      @NonNull MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback> callback) {
+      @NonNull MediationInterstitialAdConfiguration adConfiguration,
+      @NonNull
+          MediationAdLoadCallback<MediationInterstitialAd, MediationInterstitialAdCallback>
+              callback) {
     inMobiWaterfallInterstitialAd =
-        new InMobiWaterfallInterstitialAd(
-            mediationInterstitialAdConfiguration, callback, inMobiInitializer, inMobiAdFactory);
-    inMobiWaterfallInterstitialAd.loadAd();
+        new InMobiWaterfallInterstitialAd(callback, inMobiInitializer, inMobiAdFactory);
+    inMobiWaterfallInterstitialAd.loadAd(adConfiguration);
   }
 
   @Override
-  public void loadNativeAd(@NonNull MediationNativeAdConfiguration mediationNativeAdConfiguration,
+  public void loadNativeAd(
+      @NonNull MediationNativeAdConfiguration adConfiguration,
       @NonNull MediationAdLoadCallback<UnifiedNativeAdMapper, MediationNativeAdCallback> callback) {
     inMobiWaterfallNativeAd =
-        new InMobiWaterfallNativeAd(
-            mediationNativeAdConfiguration, callback, inMobiInitializer, inMobiAdFactory);
+        new InMobiWaterfallNativeAd(adConfiguration, callback, inMobiInitializer, inMobiAdFactory);
     inMobiWaterfallNativeAd.loadAd();
   }
 

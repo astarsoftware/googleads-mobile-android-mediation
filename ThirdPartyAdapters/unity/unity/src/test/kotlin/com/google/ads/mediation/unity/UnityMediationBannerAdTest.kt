@@ -51,11 +51,10 @@ class UnityMediationBannerAdTest {
   @Before
   fun setUp() {
     val unityBannerSize: UnityBannerSize? =
-      UnityAdsAdapterUtils.getUnityBannerSize(activity, adSize)
+      UnityAdsAdapterUtils.getUnityBannerSize(activity, adSize, /* isRtb= */ false)
     bannerView = BannerView(activity, TEST_PLACEMENT_ID, unityBannerSize)
     unityMediationBannerAd =
       UnityMediationBannerAd(
-        bannerAdConfiguration,
         bannerAdLoadCallback,
         unityInitializer,
         unityBannerViewFactory,
@@ -84,7 +83,7 @@ class UnityMediationBannerAdTest {
       )
     whenever(bannerAdConfiguration.context) doReturn activity
     whenever(bannerAdConfiguration.adSize) doReturn adSize
-    unityMediationBannerAd.loadAd()
+    unityMediationBannerAd.loadAd(bannerAdConfiguration)
 
     val actualBannerView = unityMediationBannerAd.getView()
 
