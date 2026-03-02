@@ -23,7 +23,12 @@ import android.content.Context;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+
 import androidx.annotation.NonNull;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
+import com.google.ads.mediation.inmobi.AstarInMobiUtils;
 import com.google.ads.mediation.inmobi.InMobiAdFactory;
 import com.google.ads.mediation.inmobi.InMobiAdapterUtils;
 import com.google.ads.mediation.inmobi.InMobiConstants;
@@ -39,6 +44,7 @@ import com.inmobi.ads.InMobiAdRequestStatus;
 import com.inmobi.ads.InMobiInterstitial;
 import com.inmobi.ads.WatermarkData;
 import com.inmobi.ads.listeners.InterstitialAdEventListener;
+
 import java.util.Map;
 
 public abstract class InMobiInterstitialAd extends InterstitialAdEventListener
@@ -145,6 +151,11 @@ public abstract class InMobiInterstitialAd extends InterstitialAdEventListener
     if (mediationAdLoadCallback != null) {
       interstitialAdCallback = mediationAdLoadCallback.onSuccess(InMobiInterstitialAd.this);
     }
+
+	  // astar
+	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+	  Map<String,Object> networkInfo = AstarInMobiUtils.getNetworkInfo(adMetaInfo);
+	  adTracker.adDidLoadForNetwork("inmobi", "admob", "interstitial", networkInfo);
   }
 
   @Override

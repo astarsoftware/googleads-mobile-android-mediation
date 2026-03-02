@@ -25,6 +25,10 @@ import android.view.View;
 import android.widget.FrameLayout;
 import android.widget.LinearLayout;
 import androidx.annotation.NonNull;
+
+import com.astarsoftware.android.ads.AdNetworkTracker;
+import com.astarsoftware.dependencies.DependencyInjector;
+import com.google.ads.mediation.inmobi.AstarInMobiUtils;
 import com.google.ads.mediation.inmobi.InMobiAdFactory;
 import com.google.ads.mediation.inmobi.InMobiAdViewHolder;
 import com.google.ads.mediation.inmobi.InMobiAdapterUtils;
@@ -137,6 +141,11 @@ public abstract class InMobiBannerAd extends BannerAdEventListener implements Me
   public void onAdLoadSucceeded(
       @NonNull InMobiBanner inMobiBanner, @NonNull AdMetaInfo adMetaInfo) {
     mediationBannerAdCallback = mediationAdLoadCallback.onSuccess(this);
+
+	  // astar
+	  AdNetworkTracker adTracker = DependencyInjector.getObjectWithClass(AdNetworkTracker.class);
+	  Map<String,Object> networkInfo = AstarInMobiUtils.getNetworkInfo(adMetaInfo);
+	  adTracker.adDidLoadForNetwork("inmobi", "admob", "banner", networkInfo);
   }
 
   @Override
